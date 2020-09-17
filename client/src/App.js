@@ -14,24 +14,24 @@ class App extends Component {
     // super();
 
     // this executes a callout
-    this.callApi()
-      .then(response => {
-        console.log(response.express)
-        this.setState({message: response.express})
-      })
-      .catch(err => console.log(err));
+    // this.callApi()
+    //   .then(response => {
+    //     console.log(response.express)
+    //     this.setState({message: response.express})
+    //   })
+    //   .catch(err => console.log(err));
 
   }
 
-  callApi = async () => {
-    return axios.get('http://localhost:5000/api/mensagem');
-    // const response = await fetch('/api/mensagem');
-    // console.log(response)
-    // const body = await response.json();
-    // if (response.status !== 200) throw Error(body.message);
+  // callApi = async () => {
+  //   return axios.get('http://localhost:5000/api/mensagem');
+  //   // const response = await fetch('/api/mensagem');
+  //   // console.log(response)
+  //   // const body = await response.json();
+  //   // if (response.status !== 200) throw Error(body.message);
 
-    // return body;
-  };
+  //   // return body;
+  // };
 
   render() {
     return (
