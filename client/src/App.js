@@ -1,25 +1,14 @@
 import React, { Component } from 'react';
-import axios from 'axios';
+// import axios from 'axios';
 // import { Table, Button } from 'reactstrap';
-
 
 class App extends Component {
 
   state = {
-    // sensors: []
     message: 'A'
   }
 
   componentDidMount() {
-    // super();
-
-    // this executes a callout
-    // this.callApi()
-    //   .then(response => {
-    //     console.log(response.express)
-    //     this.setState({message: response.express})
-    //   })
-    //   .catch(err => console.log(err));
 
   }
 
