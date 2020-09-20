@@ -1,33 +1,47 @@
-const { MongoClient } = require('mongodb');
+const {MongoClient} = require('mongodb'),
+      config = require('config.json');
 
-async function listDatabases(client) {
-    databasesList = await client.db().admin().listDatabases();
+// async function listDatabases(client) {
+//     databasesList = await client.db().admin().listDatabases();
 
-    console.log("Databases:");
-    databasesList.databases.forEach(db => console.log(` - ${db.name}`));
-};
+//     console.log("Databases:");
+//     databasesList.databases.forEach(db => console.log(` - ${db.name}`));
+// }
 
-async function main() {
-    /**
-     * Connection URI. Update <username>, <password>, and <your-cluster-url> to reflect your cluster.
-     * See https://docs.mongodb.com/ecosystem/drivers/node/ for more details
-     */
-    const uri = "mongodb+srv://admin:gpsindooradmin1710@gps-indoor.r7o96.mongodb.net/gps-indoor?retryWrites=true&w=majority";
+async function find(collection, data) {
 
-    const client = new MongoClient(uri);
+    const url = config.mongoUrl;
 
-    try {
-        // Connect to the MongoDB cluster
-        await client.connect();
+    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, db) {
 
-        // Make the appropriate DB calls
-        await listDatabases(client);
+        if (err) throw err;
+        var database = db.db("GPSIndoor");
 
-    } catch (e) {
-        console.error(e);
-    } finally {
-        await client.close();
-    }
+        database.collection(collection).find(data).toArray(function (err, res) {
+            if (err) throw err;
+            console.log(res);
+            db.close();
+            return res;
+        });
+    });
 }
 
-main().catch(console.error);
+async function insert(collection, data) {
+
+    const url = config.mongoUrl;
+
+    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, db) {
+
+        if (err) throw err;
+        var database = db.db("GPSIndoor");
+
+        database.collection(collection).insertOne(data, function (err, res) {
+            if (err) throw err;
+            console.log(collection + " inserted");
+            db.close();
+            return res;
+        });
+    });
+}
+
+module.exports = {find, insert};
