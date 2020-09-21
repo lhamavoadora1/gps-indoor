@@ -4,20 +4,21 @@ const express = require('express'),
 
 var router = express.Router();
 
-router.get('/', getAllUsers);
-router.get('/:_id', getUser);
+router.get('/', getUser);
+// router.get('/:_id', getUser);
 router.patch('/:_id', updateUser);
 
 module.exports = router;
 
-function getAllUsers(req, res) {
-    res.send({
-        all: "users"
-    });
-}
+// function getAllUsers(req, res) {
+//     res.send({
+//         all: "users"
+//     });
+// }
 
-function getUser(req, res) {
-    var dbResponse = mongo.find(collection, req.body)
+async function getUser(req, res) {
+    var dbResponse = await mongo.find(collection, req.body);
+    console.log('checkpoint 5');
     console.log(dbResponse);
     res.json(
         dbResponse
