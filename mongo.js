@@ -4,14 +4,6 @@ const {
     config = require('config.json'),
     cluster = config.mongoCluster;
 
-module.exports = {
-    authenticate,
-    findDB,
-    insertDB,
-    updateDB,
-    deleteDB
-};
-
 async function authenticate(req) {
 
     const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
@@ -124,3 +116,11 @@ async function deleteDB(collection, keyData) {
         client.close();
     }
 }
+
+module.exports = {
+    authenticate,
+    findDB,
+    insertDB,
+    updateDB,
+    deleteDB
+};

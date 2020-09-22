@@ -1,7 +1,7 @@
 const express = require('express'),
     mongo = require('mongo.js'),
-    utils = require('utils');
-collection = 'tags';
+    utils = require('utils'),
+    collection = 'tags';
 
 var tags = {};
 

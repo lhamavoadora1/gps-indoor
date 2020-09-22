@@ -1,9 +1,3 @@
-module.exports = {
-    isEmpty,
-    Success,
-    Error
-};
-
 function isEmpty(str) {
     console.log('str => ' + str);
     console.log('typeof str == undefined => ' + (typeof str == 'undefined'));
@@ -25,3 +19,9 @@ class Error {
         this.message = message;
     }
 }
+
+module.exports = {
+    isEmpty,
+    Success,
+    Error
+};
