@@ -18,7 +18,6 @@ module.exports = router;
 
 async function getUser(req, res) {
     var dbResponse = await mongo.find(collection, req.body);
-    console.log('checkpoint 5');
     console.log(dbResponse);
     res.json(
         dbResponse

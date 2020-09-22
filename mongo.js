@@ -2,35 +2,47 @@ const {
     MongoClient
 } = require('mongodb'),
     config = require('config.json'),
-    cluster = 'GPSIndoor';
+    cluster = config.mongoCluster;
 
-// async function listDatabases(client) {
-//     databasesList = await client.db().admin().listDatabases();
+module.exports = {
+    authenticate,
+    findDB,
+    insertDB,
+    updateDB,
+    deleteDB
+};
 
-//     console.log("Databases:");
-//     databasesList.databases.forEach(db => console.log(` - ${db.name}`));
-// }
+async function authenticate(req) {
 
-async function find(collection, data) {
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const [user, pass] = Buffer.from(b64auth, 'base64').toString().split(':');
+
+    console.log('data => ' + user + ' - ' + pass);
+
+    var users = await findDB('users', {
+        "username": user,
+        "password": pass
+    });
+
+    return users.length;
+
+}
+
+async function findDB(collection, data) {
 
     const url = config.mongoUrl;
 
-    console.log('checkpoint 1');
-
     let client, db;
     try {
-        console.log('checkpoint 2');
         client = await MongoClient.connect(url, {
             useUnifiedTopology: true
         });
-        console.log('checkpoint 3');
 
         db = client.db(cluster);
 
         let dCollection = db.collection(collection);
 
         let result = await dCollection.find(data).toArray();
-        console.log('checkpoint 4');
 
         return result;
 
@@ -39,51 +51,76 @@ async function find(collection, data) {
     } finally {
         client.close();
     }
-
-    // MongoClient.connect(url, { useUnifiedTopology: true })
-    //     .then(function (db) {
-    //         console.log('checkpoint 2');
-
-    //         var database = db.db(cluster);
-
-    //         database.collection(collection).find(data).toArray(function (err, res) {
-    //             console.log('checkpoint 3');
-    //             db.close();
-    //             if (err) throw err;
-    //             console.log(res);
-    //             return res;
-    //         });
-    //         console.log('checkpoint 3.1');
-    //     })
-    //     .catch(function(err) {
-    //         console.log(err);
-    //         throw err;
-    //     });
-
-    console.log('checkpoint 3.2');
 }
 
-function insert(collection, data) {
+async function insertDB(collection, data) {
 
     const url = config.mongoUrl;
 
-    MongoClient.connect(url, {
-        useUnifiedTopology: true
-    }, function (err, db) {
-
-        if (err) throw err;
-        var database = db.db(cluster);
-
-        database.collection(collection).insertOne(data, function (err, res) {
-            db.close();
-            if (err) throw err;
-            console.log(collection + " inserted");
-            return res;
+    try {
+        client = await MongoClient.connect(url, {
+            useUnifiedTopology: true
         });
-    });
+
+        db = client.db(cluster);
+
+        let dCollection = db.collection(collection);
+
+        let result = await dCollection.insertOne(data);
+
+        return result;
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        client.close();
+    }
 }
 
-module.exports = {
-    find,
-    insert
-};
+async function updateDB(collection, keyData, data) {
+
+    const url = config.mongoUrl;
+
+    try {
+        client = await MongoClient.connect(url, {
+            useUnifiedTopology: true
+        });
+
+        db = client.db(cluster);
+
+        let dCollection = db.collection(collection);
+
+        let result = await dCollection.updateOne(keyData, data);
+
+        return result;
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        client.close();
+    }
+}
+
+async function deleteDB(collection, keyData) {
+
+    const url = config.mongoUrl;
+
+    try {
+        client = await MongoClient.connect(url, {
+            useUnifiedTopology: true
+        });
+
+        db = client.db(cluster);
+
+        let dCollection = db.collection(collection);
+
+        let result = await dCollection.deleteOne(keyData);
+
+        return result;
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        client.close();
+    }
+}

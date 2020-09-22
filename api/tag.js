@@ -1,47 +1,95 @@
 const express = require('express'),
     mongo = require('mongo.js'),
-    collection = 'tags';
+    utils = require('utils');
+collection = 'tags';
 
 var tags = {};
 
 var router = express.Router();
 router.get('/', getAllTags);
-router.get('/:_id', getTag);
+router.get('/:tag_id', getTag);
 router.post('/', insertTag);
-router.patch('/:_id', updateTag);
-router.delete('/:_id', deleteTag);
+router.patch('/:tag_id', updateTag);
+router.delete('/:tag_id', deleteTag);
 module.exports = router;
 
-function getAllTags(req, res) {
-    res.send({
-        all: "tags"
-    });
-}
-
-function getTag(req, res) {
-    res.send({
-        tags
-    });
-}
-
-function insertTag(req, res) {
-    try {
-        console.log(mongo.insert(collection, req.body));
-        res.json(req.body);
-    } catch (err) {
-        console.log(err);
+async function getAllTags(req, res) {
+    if (await mongo.authenticate(req)) {
+        res.send({
+            all: "tags"
+        });
+    } else {
+        res.status(401).send();
     }
 }
 
-function updateTag(req, res) {
-    res.json(req.body);
+async function getTag(req, res) {
+    if (await mongo.authenticate(req)) {
+        var tagsRetrieved = await mongo.findDB(collection, {
+            tag_id: req.params.tag_id
+        });
+        if (!utils.isEmpty(tagsRetrieved)) {
+            res.send({
+                tagsRetrieved
+            });
+        } else {
+            res.status(204).send();
+        }
+    } else {
+        res.status(401).send();
+    }
 }
 
-function deleteTag(req, res) {
-    res.json(req.body);
+async function insertTag(req, res) {
+    if (await mongo.authenticate(req)) {
+        var tag_id = req.body.tag_id;
+        var data = await mongo.insertDB(collection, req.body);
+        if (data.result.n > 0) {
+            res.json(new utils.Success(`Tag '${tag_id}' inserted!`));
+        } else {
+            res.json(new utils.Error(`Tag '${tag_id}' failed to insert, contact an admin for help`));
+        }
+    } else {
+        res.status(401).send();
+    }
 }
 
-function Tag(_id, name) {
-    this._id  = _id;
-    this.name = name;
+async function updateTag(req, res) {
+    if (await mongo.authenticate(req)) {
+        var tag_id = req.params.tag_id;
+        var data = await mongo.updateDB(collection, {
+            tag_id: tag_id
+        }, {
+            $set: req.body
+        });
+        if (data.result.nModified > 0) {
+            res.json(new utils.Success(`Tag '${tag_id}' updated!`));
+        } else {
+            res.json(new utils.Error(`Tag '${tag_id}' failed to update, verify if the id is correct and try again`));
+        }
+    } else {
+        res.status(401).send();
+    }
 }
+
+async function deleteTag(req, res) {
+    if (await mongo.authenticate(req)) {
+        var tag_id = req.params.tag_id;
+        var data = await mongo.deleteDB(collection, {
+            tag_id: tag_id
+        });
+        if (data.result.n > 0) {
+            res.json(new utils.Success(`Tag '${tag_id}' deleted!`));
+        } else {
+            res.json(new utils.Error(`Tag '${tag_id}' failed to delete, verify if the id is correct and try again`));
+        }
+    } else {
+        res.status(401).send();
+    }
+}
+
+// function Tag(_id, name, owner) {
+//     this._id = _id;
+//     this.name = name;
+//     this.owner = owner;
+// }
