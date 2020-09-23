@@ -1,20 +1,15 @@
 const {
     MongoClient
 } = require('mongodb'),
+    utils = require('utils.js'),
     config = require('config.json'),
     cluster = config.mongoCluster;
 
-async function authenticate(req) {
+async function authenticate(authorization) {
 
-    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
-    const [user, pass] = Buffer.from(b64auth, 'base64').toString().split(':');
+    var basicData = utils.getBasicAuthData(authorization);
 
-    console.log('data => ' + user + ' - ' + pass);
-
-    var users = await findDB('users', {
-        "username": user,
-        "password": pass
-    });
+    var users = await findDB('users', basicData);
 
     return users.length;
 
