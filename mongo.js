@@ -1,33 +1,126 @@
-const { MongoClient } = require('mongodb');
+const {
+    MongoClient
+} = require('mongodb'),
+    config = require('config.json'),
+    cluster = config.mongoCluster;
 
-async function listDatabases(client) {
-    databasesList = await client.db().admin().listDatabases();
+async function authenticate(req) {
 
-    console.log("Databases:");
-    databasesList.databases.forEach(db => console.log(` - ${db.name}`));
-};
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const [user, pass] = Buffer.from(b64auth, 'base64').toString().split(':');
 
-async function main() {
-    /**
-     * Connection URI. Update <username>, <password>, and <your-cluster-url> to reflect your cluster.
-     * See https://docs.mongodb.com/ecosystem/drivers/node/ for more details
-     */
-    const uri = "mongodb+srv://admin:gpsindooradmin1710@gps-indoor.r7o96.mongodb.net/gps-indoor?retryWrites=true&w=majority";
+    console.log('data => ' + user + ' - ' + pass);
 
-    const client = new MongoClient(uri);
+    var users = await findDB('users', {
+        "username": user,
+        "password": pass
+    });
 
+    return users.length;
+
+}
+
+async function findDB(collection, data) {
+
+    const url = config.mongoUrl;
+
+    let client, db;
     try {
-        // Connect to the MongoDB cluster
-        await client.connect();
+        client = await MongoClient.connect(url, {
+            useUnifiedTopology: true
+        });
 
-        // Make the appropriate DB calls
-        await listDatabases(client);
+        db = client.db(cluster);
 
-    } catch (e) {
-        console.error(e);
+        let dCollection = db.collection(collection);
+
+        let result = await dCollection.find(data).toArray();
+
+        return result;
+
+    } catch (err) {
+        console.error(err);
     } finally {
-        await client.close();
+        client.close();
     }
 }
 
-main().catch(console.error);
+async function insertDB(collection, data) {
+
+    const url = config.mongoUrl;
+
+    try {
+        client = await MongoClient.connect(url, {
+            useUnifiedTopology: true
+        });
+
+        db = client.db(cluster);
+
+        let dCollection = db.collection(collection);
+
+        let result = await dCollection.insertOne(data);
+
+        return result;
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        client.close();
+    }
+}
+
+async function updateDB(collection, keyData, data) {
+
+    const url = config.mongoUrl;
+
+    try {
+        client = await MongoClient.connect(url, {
+            useUnifiedTopology: true
+        });
+
+        db = client.db(cluster);
+
+        let dCollection = db.collection(collection);
+
+        let result = await dCollection.updateOne(keyData, data);
+
+        return result;
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        client.close();
+    }
+}
+
+async function deleteDB(collection, keyData) {
+
+    const url = config.mongoUrl;
+
+    try {
+        client = await MongoClient.connect(url, {
+            useUnifiedTopology: true
+        });
+
+        db = client.db(cluster);
+
+        let dCollection = db.collection(collection);
+
+        let result = await dCollection.deleteOne(keyData);
+
+        return result;
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        client.close();
+    }
+}
+
+module.exports = {
+    authenticate,
+    findDB,
+    insertDB,
+    updateDB,
+    deleteDB
+};
