@@ -2,8 +2,17 @@ const {
     MongoClient
 } = require('mongodb'),
     utils = require('utils.js'),
-    config = require('config.json'),
-    cluster = config.mongoCluster;
+    dbUrl,
+    config,
+    cluster;
+    try {
+        config = require('config.json');
+        cluster = config.mongoCluster;
+        dbUrl = config.url;
+    } catch (error) {
+        cluster = process.env.mongoCluster;
+        dbUrl = process.env.mongoUrl;
+    }
 
 async function authenticate(authorization) {
 
@@ -17,7 +26,7 @@ async function authenticate(authorization) {
 
 async function findDB(collection, data) {
 
-    const url = config.mongoUrl;
+    const url = dbUrl;
 
     let client, db;
     try {
@@ -42,7 +51,7 @@ async function findDB(collection, data) {
 
 async function insertDB(collection, data) {
 
-    const url = config.mongoUrl;
+    const url =dbUrl;
 
     try {
         client = await MongoClient.connect(url, {
@@ -66,7 +75,7 @@ async function insertDB(collection, data) {
 
 async function updateDB(collection, keyData, data) {
 
-    const url = config.mongoUrl;
+    const url = dbUrl;
 
     try {
         client = await MongoClient.connect(url, {
@@ -90,7 +99,7 @@ async function updateDB(collection, keyData, data) {
 
 async function deleteDB(collection, keyData) {
 
-    const url = config.mongoUrl;
+    const url = dbUrl;
 
     try {
         client = await MongoClient.connect(url, {
