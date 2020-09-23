@@ -1,10 +1,11 @@
 const {
     MongoClient
 } = require('mongodb'),
-    utils = require('utils.js'),
-    dbUrl,
-    config,
-    cluster;
+    utils = require('utils.js');
+    var dbUrl = "",
+    config = "",
+    cluster = "";
+    
     try {
         config = require('config.json');
         cluster = config.mongoCluster;
