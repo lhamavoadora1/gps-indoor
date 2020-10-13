@@ -55,15 +55,20 @@ async function getTag(req, res) {
 
 async function insertTag(req, res) {
     try {
-        if (await mongo.authenticate(req.headers.authorization)) {
+        var authorization = req.headers.authorization;
+        if (await mongo.authenticate(authorization)) {
             var tag_id = req.body.tag_id;
+            var owner = utils.getBase64Auth(authorization);
             var tagsRetrieved = await mongo.findDB(collection, {
-                tag_id: tag_id
+                tag_id: tag_id,
+                owner: owner
             });
             if (!utils.isEmpty(tagsRetrieved)) {
                 res.send(new utils.Error(`Tag '${tag_id}' is already in database!`));
             } else {
-                var data = await mongo.insertDB(collection, req.body);
+                var fullRequest = req.body;
+                fullRequest.owner = owner;
+                var data = await mongo.insertDB(collection, fullRequest);
                 if (data.result.n > 0) {
                     res.json(new utils.Success(`Tag '${tag_id}' inserted!`));
                 } else {
@@ -81,10 +86,13 @@ async function insertTag(req, res) {
 
 async function updateTag(req, res) {
     try {
-        if (await mongo.authenticate(req.headers.authorization)) {
+        var authorization = req.headers.authorization;
+        if (await mongo.authenticate(authorization)) {
             var tag_id = req.params.tag_id;
+            var owner = utils.getBase64Auth(authorization);
             var data = await mongo.updateDB(collection, {
-                tag_id: tag_id
+                tag_id: tag_id,
+                owner: owner
             }, {
                 $set: req.body
             });
