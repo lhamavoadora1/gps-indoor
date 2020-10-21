@@ -14,7 +14,8 @@ router.delete('/:tag_id', deleteTag);
 module.exports = router;
 
 async function getAllTags(req, res) {
-    if (await mongo.authenticate(req.headers.authorization)) {
+    var authorization = req.headers.authorization;
+    if (await mongo.authenticate(authorization)) {
         var ownerKey = utils.getOwnerKey(authorization);
         var tagsRetrieved = await mongo.findDB(collection, {
             owner: ownerKey
