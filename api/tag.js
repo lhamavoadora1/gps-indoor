@@ -15,9 +15,9 @@ module.exports = router;
 
 async function getAllTags(req, res) {
     if (await mongo.authenticate(req.headers.authorization)) {
-        var base64auth = utils.getBase64Auth(req.headers.authorization);
+        var ownerKey = utils.getOwnerKey(authorization);
         var tagsRetrieved = await mongo.findDB(collection, {
-            owner: base64auth
+            owner: ownerKey
         });
         if (!utils.isEmpty(tagsRetrieved)) {
             res.send({
@@ -33,9 +33,12 @@ async function getAllTags(req, res) {
 
 async function getTag(req, res) {
     try {
-        if (await mongo.authenticate(req.headers.authorization)) {
+        var authorization = req.headers.authorization;
+        if (await mongo.authenticate(authorization)) {
+            var ownerKey = utils.getOwnerKey(authorization);
             var tagsRetrieved = await mongo.findDB(collection, {
-                tag_id: req.params.tag_id
+                tag_id: req.params.tag_id,
+                owner: ownerKey
             });
             if (!utils.isEmpty(tagsRetrieved)) {
                 res.send({
@@ -58,16 +61,16 @@ async function insertTag(req, res) {
         var authorization = req.headers.authorization;
         if (await mongo.authenticate(authorization)) {
             var tag_id = req.body.tag_id;
-            var owner = utils.getBase64Auth(authorization);
+            var ownerKey = utils.getOwnerKey(authorization);
             var tagsRetrieved = await mongo.findDB(collection, {
                 tag_id: tag_id,
-                owner: owner
+                owner: ownerKey
             });
             if (!utils.isEmpty(tagsRetrieved)) {
                 res.send(new utils.Error(`Tag '${tag_id}' is already in database!`));
             } else {
                 var fullRequest = req.body;
-                fullRequest.owner = owner;
+                fullRequest.owner = ownerKey;
                 var data = await mongo.insertDB(collection, fullRequest);
                 if (data.result.n > 0) {
                     res.json(new utils.Success(`Tag '${tag_id}' inserted!`));
@@ -89,10 +92,10 @@ async function updateTag(req, res) {
         var authorization = req.headers.authorization;
         if (await mongo.authenticate(authorization)) {
             var tag_id = req.params.tag_id;
-            var owner = utils.getBase64Auth(authorization);
+            var ownerKey = utils.getOwnerKey(authorization);
             var data = await mongo.updateDB(collection, {
                 tag_id: tag_id,
-                owner: owner
+                owner: ownerKey
             }, {
                 $set: req.body
             });
@@ -112,10 +115,13 @@ async function updateTag(req, res) {
 
 async function deleteTag(req, res) {
     try {
-        if (await mongo.authenticate(req.headers.authorization)) {
+        var authorization = req.headers.authorization;
+        if (await mongo.authenticate(authorization)) {
             var tag_id = req.params.tag_id;
+            var ownerKey = utils.getOwnerKey(authorization);
             var data = await mongo.deleteDB(collection, {
-                tag_id: tag_id
+                tag_id: tag_id,
+                owner: ownerKey
             });
             if (data.result.n > 0) {
                 res.json(new utils.Success(`Tag '${tag_id}' deleted!`));
