@@ -19,6 +19,17 @@ function getBasicAuthData(authorization) {
 
 }
 
+function getOwnerKey(authorization) {
+
+    const b64auth = getBase64Auth(authorization);
+    const [user, pass] = Buffer.from(b64auth, 'base64').toString().split(':');
+
+    var ownerKey = Buffer.from(user).toString('base64');
+
+    return ownerKey;
+
+}
+
 class Success {
     constructor(message) {
         this.success = true;
@@ -37,6 +48,7 @@ module.exports = {
     isEmpty,
     getBase64Auth,
     getBasicAuthData,
+    getOwnerKey,
     Success,
     Error
 };

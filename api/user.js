@@ -23,12 +23,12 @@ async function getUser(req, res) {
 
 async function updateUser(req, res) {
     try {
-        if (await mongo.authenticate(req.headers.authorization)) {
-            var basicData = utils.getBasicAuthData(req.headers.authorization);
+        var authorization = req.headers.authorization;
+        if (await mongo.authenticate(authorization)) {
+            var basicData = utils.getBasicAuthData(authorization);
             var data = await mongo.updateDB(collection, basicData, {
                 $set: req.body
             });
-            console.log(data);
             if (data.result.nModified > 0 || data.result.n > 0) {
                 res.json(new utils.Success(`Password updated!`));
             } else {
