@@ -9,7 +9,7 @@ const {
     try {
         config = require('config.json');
         cluster = config.mongoCluster;
-        dbUrl = config.url;
+        dbUrl = config.mongoUrl;
     } catch (error) {
         cluster = process.env.mongoCluster;
         dbUrl = process.env.mongoUrl;
