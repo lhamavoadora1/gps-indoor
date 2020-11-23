@@ -79,12 +79,18 @@ async function insertTag(req, res) {
             } else {
                 var fullRequest = req.body;
                 fullRequest.owner = ownerKey;
+                var tagsRetrieved = await mongo.findDB(collection, {
+                    tag_id: req.params.tag_id,
+                    owner: ownerKey
+                });
+                if (!utils.isEmpty(tagsRetrieved)) {
+                    res.json(new utils.Error(`Tag  failed to insert, contact an admin for help`));
+                }
                 var data = await mongo.insertDB(collection, fullRequest);
                 if (data.result.n > 0) {
                     res.json(new utils.Success('Tag inserted'));
                 } else {
-                    res.status(204).send();
-                    res.json(new utils.Error(`Tag '${tag_id}' failed to insert, contact an admin for help`));
+                    res.json(new utils.Error(`Tag  failed to insert, contact an admin for help`));
                 }
             }
         } else {
