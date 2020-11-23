@@ -59,7 +59,14 @@ async function getTag(req, res) {
 
 async function insertTag(req, res) {
     try {
-        var authorization = req.headers.authorization;
+        var authorization =  "";
+        if(req.headers.authorization!= undefined){
+            authorization = req.headers.authorization; 
+        }
+        else{
+            authorization = req.body.headers.authorization;
+        }
+
         if (await mongo.authenticate(authorization)) {
             var tag_id = req.body.tag_id;
             var ownerKey = utils.getOwnerKey(authorization);
@@ -74,8 +81,9 @@ async function insertTag(req, res) {
                 fullRequest.owner = ownerKey;
                 var data = await mongo.insertDB(collection, fullRequest);
                 if (data.result.n > 0) {
-                    res.json(new utils.Success(`Tag '${tag_id}' inserted!`));
+                    res.json(new utils.Success('Tag inserted'));
                 } else {
+                    res.status(204).send();
                     res.json(new utils.Error(`Tag '${tag_id}' failed to insert, contact an admin for help`));
                 }
             }
