@@ -14,14 +14,7 @@ router.delete('/:tag_id', deleteTag);
 module.exports = router;
 
 async function getAllTags(req, res) {
-    var authorization =  "";
-    if(req.headers.authorization!= undefined){
-        authorization = req.headers.authorization; 
-    }
-    else{
-        authorization = req.body.headers.authorization;
-    }
-
+    var authorization = req.headers.authorization;
     if (await mongo.authenticate(authorization)) {
         var ownerKey = utils.getOwnerKey(authorization);
         var tagsRetrieved = await mongo.findDB(collection, {
@@ -77,9 +70,8 @@ async function insertTag(req, res) {
         if (await mongo.authenticate(authorization)) {
             var tag_id = req.body.tag_id;
             var ownerKey = utils.getOwnerKey(authorization);
-            
-            /*var tagsRetrieved = await mongo.findDB(collection, {
-                tag_id: req.body.body.tag_id,
+            var tagsRetrieved = await mongo.findDB(collection, {
+                tag_id: tag_id,
                 owner: ownerKey
             });
             if (!utils.isEmpty(tagsRetrieved)) {
@@ -94,17 +86,13 @@ async function insertTag(req, res) {
                 if (!utils.isEmpty(tagsRetrieved)) {
                     res.json(new utils.Error(`Tag  failed to insert, contact an admin for help`));
                 }
-                */
-                var data = await mongo.insertDB(collection, {
-                    tag_id:  req.body.body.tag_id,
-                    owner: ownerKey
-                });
+                var data = await mongo.insertDB(collection, fullRequest);
                 if (data.result.n > 0) {
                     res.json(new utils.Success('Tag inserted'));
                 } else {
                     res.json(new utils.Error(`Tag  failed to insert, contact an admin for help`));
                 }
-           // }
+            }
         } else {
             res.status(401).send();
         }
