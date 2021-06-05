@@ -18,8 +18,12 @@ const {
 async function authenticate(authorization) {
 
     var basicData = utils.getBasicAuthData(authorization);
+    console.log('basicData')
+    console.log(basicData)
 
     var users = await findDB('users', basicData);
+    console.log('users')
+    console.log(users)
 
     return users.length;
 
