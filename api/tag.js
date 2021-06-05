@@ -137,9 +137,3 @@ async function deleteTag(req, res) {
         res.status(500).send(new utils.Error(err));
     }
 }
-
-// function Tag(_id, name, owner) {
-//     this._id = _id;
-//     this.name = name;
-//     this.owner = owner;
-// }

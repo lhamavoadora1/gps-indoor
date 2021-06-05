@@ -42,9 +42,3 @@ async function updateUser(req, res) {
         res.status(500).send(new utils.Error(err));
     }
 }
-
-// function User(_id, user, pass) {
-//     this._id = _id;
-//     this.username = user;
-//     this.password = pass;
-// }

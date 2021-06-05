@@ -1,9 +1,9 @@
-function isEmpty(str) {
-    // console.log('str => ' + str);
-    // console.log('typeof str == undefined => ' + (typeof str == 'undefined'));
-    // console.log('str == null => ' + (str == null));
-    // console.log('str.length => ' + str.length);
-    return (typeof str == 'undefined' || str == null || str.length == 0);
+function isUndefined(obj) {
+    return (typeof obj == 'undefined')
+}
+
+function isEmpty(obj) {
+    return (isUndefined(obj) || obj == null || obj.length == 0);
 }
 
 function getBase64Auth(authorization) {
@@ -30,6 +30,13 @@ function getOwnerKey(authorization) {
 
 }
 
+function isIterable(obj) {
+    if (obj == null || isUndefined(obj)) {
+        return false;
+    }
+    return typeof obj[Symbol.iterator] === 'function';
+}
+
 class Success {
     constructor(message) {
         this.success = true;
@@ -45,10 +52,12 @@ class Error {
 }
 
 module.exports = {
+    isUndefined,
     isEmpty,
     getBase64Auth,
     getBasicAuthData,
     getOwnerKey,
+    isIterable,
     Success,
     Error
 };
