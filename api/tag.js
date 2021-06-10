@@ -70,7 +70,7 @@ async function insertTag(req, res) {
             if (!utils.isEmpty(tagsRetrieved)) {
                 res.send(new utils.Error(`Tag '${tag_id}' is already in database!`));
             } else {
-                var fullRequest = req.body;
+                var fullRequest = new TagInsert(req.body);
                 fullRequest.owner = ownerKey;
                 var data = await mongo.insertDB(collection, fullRequest);
                 if (data.result.n > 0) {
@@ -83,6 +83,8 @@ async function insertTag(req, res) {
             res.status(401).send();
         }
     } catch (err) {
+        console.log('Body from request may be in the wrong format:');
+        console.log(req.body)
         console.error(err);
         res.status(500).send(new utils.Error(err));
     }
@@ -98,7 +100,7 @@ async function updateTag(req, res) {
                 tag_id: tag_id,
                 owner: ownerKey
             }, {
-                $set: req.body
+                $set: new TagUpdate(req.body)
             });
             if (data.result.nModified > 0 || data.result.n > 0) {
                 res.json(new utils.Success(`Tag '${tag_id}' updated!`));
@@ -135,5 +137,17 @@ async function deleteTag(req, res) {
     } catch (err) {
         console.error(err);
         res.status(500).send(new utils.Error(err));
+    }
+}
+
+class TagInsert {
+    constructor(tag) {
+        this.tag_id = tag.tag_id;
+        this.name   = tag.name;
+    }
+}
+class TagUpdate {
+    constructor(tag) {
+        this.name = tag.name;
     }
 }
