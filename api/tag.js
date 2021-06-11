@@ -62,21 +62,25 @@ async function insertTag(req, res) {
         var authorization = req.headers.authorization;
         if (await mongo.authenticate(authorization)) {
             var tag_id = req.body.tag_id;
-            var ownerKey = utils.getOwnerKey(authorization);
-            var tagsRetrieved = await mongo.findDB(collection, {
-                tag_id: tag_id,
-                owner: ownerKey
-            });
-            if (!utils.isEmpty(tagsRetrieved)) {
-                res.send(new utils.Error(`Tag '${tag_id}' is already in database!`));
+            if (utils.isEmpty(tag_id)) {
+                res.status(400).send(new utils.Error(`tag_id is empty!`));
             } else {
-                var fullRequest = new TagInsert(req.body);
-                fullRequest.owner = ownerKey;
-                var data = await mongo.insertDB(collection, fullRequest);
-                if (data.result.n > 0) {
-                    res.json(new utils.Success(`Tag '${tag_id}' inserted!`));
+                var ownerKey = utils.getOwnerKey(authorization);
+                var tagsRetrieved = await mongo.findDB(collection, {
+                    tag_id: tag_id,
+                    owner: ownerKey
+                });
+                if (!utils.isEmpty(tagsRetrieved)) {
+                    res.status(406).send(new utils.Error(`Tag '${tag_id}' is already in database!`));
                 } else {
-                    res.json(new utils.Error(`Tag '${tag_id}' failed to insert, contact an admin for help`));
+                    var fullRequest = new TagInsert(req.body);
+                    fullRequest.owner = ownerKey;
+                    var data = await mongo.insertDB(collection, fullRequest);
+                    if (data.result.n > 0) {
+                        res.status(201).send(new utils.Success(`Tag '${tag_id}' inserted!`));
+                    } else {
+                        res.status(406).send(new utils.Error(`Tag '${tag_id}' failed to insert, contact an admin for help`));
+                    }
                 }
             }
         } else {
@@ -103,9 +107,9 @@ async function updateTag(req, res) {
                 $set: new TagUpdate(req.body)
             });
             if (data.result.nModified > 0 || data.result.n > 0) {
-                res.json(new utils.Success(`Tag '${tag_id}' updated!`));
+                res.send(new utils.Success(`Tag '${tag_id}' updated!`));
             } else {
-                res.json(new utils.Error(`Tag '${tag_id}' failed to update, verify if the id is correct and try again`));
+                res.status(406).send(new utils.Error(`Tag '${tag_id}' failed to update, verify if the id is correct and try again`));
             }
         } else {
             res.status(401).send();
@@ -127,9 +131,9 @@ async function deleteTag(req, res) {
                 owner: ownerKey
             });
             if (data.result.n > 0) {
-                res.json(new utils.Success(`Tag '${tag_id}' deleted!`));
+                res.send(new utils.Success(`Tag '${tag_id}' deleted!`));
             } else {
-                res.json(new utils.Error(`Tag '${tag_id}' failed to delete, verify if the id is correct and try again`));
+                res.status(406).send(new utils.Error(`Tag '${tag_id}' failed to delete, verify if the id is correct and try again`));
             }
         } else {
             res.status(401).send();
