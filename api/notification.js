@@ -62,19 +62,19 @@ async function insertNotification(req, res) {
     try {
         var authorization = req.headers.authorization;
         if (await mongo.authenticate(authorization)) {
-            // APENAS O USER DO HELIX PODE NOTIFICAR!!!!!!!!!!
+            // APENAS O USER PADRÃO DO BROKER PODE NOTIFICAR!!!!!!!!!!
             var timestamp = req.body.timestamp;
             if (utils.isEmpty(timestamp)) {
                 res.status(400).send(new utils.Error(`timestamp is empty!`));
             } else {
-                var ownerKey = '';//utils.getOwnerKey(authorization);
-                // var notificationsRetrieved = await mongo.findDB(collection, {
-                //     timestamp: timestamp,
-                //     owner: ownerKey
-                // });
-                // if (!utils.isEmpty(notificationsRetrieved)) {
-                //     res.status(406).send(new utils.Error(`Notification '${timestamp}' is already in database!`));
-                // } else {
+                var ownerKey = utils.getOwnerKey(authorization);
+                var notificationsRetrieved = await mongo.findDB(collection, {
+                    timestamp: timestamp,
+                    owner: ownerKey
+                });
+                if (!utils.isEmpty(notificationsRetrieved)) {
+                    res.status(406).send(new utils.Error(`Notification '${timestamp}' is already in database!`));
+                } else {
                     var fullRequest = new NotificationInsert(req.body);
                     fullRequest.owner = ownerKey;
                     var data = await mongo.insertDB(collection, fullRequest);
@@ -83,7 +83,7 @@ async function insertNotification(req, res) {
                     } else {
                         res.status(406).send(new utils.Error(`Notification '${timestamp}' failed to insert, contact an admin for help`));
                     }
-                // }
+                }
             }
         } else {
             res.status(401).send();
