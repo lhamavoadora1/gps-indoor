@@ -2,7 +2,6 @@ require('rootpath')();
 var express = require('express');
 var cors = require('cors');
 
-
 var app = express();
 app.use(cors());
 
@@ -12,6 +11,8 @@ port = process.env.PORT || 5000
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+app.use('/notification', require('api/notification'));
+app.use('/sensor', require('api/sensor'));
 app.use('/tag', require('api/tag'));
 app.use('/user', require('api/user'));
 

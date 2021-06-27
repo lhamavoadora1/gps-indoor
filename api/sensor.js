@@ -1,28 +1,26 @@
 const express = require('express'),
     mongo = require('mongo.js'),
     utils = require('utils.js'),
-    collection = 'tags';
-
-var tags = {};
+    collection = 'sensors';
 
 var router = express.Router();
-router.get('/', getAllTags);
-router.get('/:tag_id', getTag);
-router.post('/', insertTag);
-router.patch('/:tag_id', updateTag);
-router.delete('/:tag_id', deleteTag);
+router.get('/', getAllSensors);
+router.get('/:sensor_id', getSensor);
+router.post('/', insertSensor);
+router.patch('/:sensor_id', updateSensor);
+router.delete('/:sensor_id', deleteSensor);
 module.exports = router;
 
-async function getAllTags(req, res) {
+async function getAllSensors(req, res) {
     var authorization = req.headers.authorization;
     if (await mongo.authenticate(authorization)) {
         var ownerKey = utils.getOwnerKey(authorization);
-        var tagsRetrieved = await mongo.findDB(collection, {
+        var sensorsRetrieved = await mongo.findDB(collection, {
             owner: ownerKey
         });
-        if (!utils.isEmpty(tagsRetrieved)) {
+        if (!utils.isEmpty(sensorsRetrieved)) {
             res.send({
-                tagsRetrieved
+                sensorsRetrieved
             });
         } else {
             res.status(204).send();
@@ -32,18 +30,18 @@ async function getAllTags(req, res) {
     }
 }
 
-async function getTag(req, res) {
+async function getSensor(req, res) {
     try {
         var authorization = req.headers.authorization;
         if (await mongo.authenticate(authorization)) {
             var ownerKey = utils.getOwnerKey(authorization);
-            var tagsRetrieved = await mongo.findDB(collection, {
-                tag_id: req.params.tag_id,
+            var sensorsRetrieved = await mongo.findDB(collection, {
+                sensor_id: req.params.sensor_id,
                 owner: ownerKey
             });
-            if (!utils.isEmpty(tagsRetrieved)) {
+            if (!utils.isEmpty(sensorsRetrieved)) {
                 res.send({
-                    tagsRetrieved
+                    sensorsRetrieved
                 });
             } else {
                 res.status(204).send();
@@ -57,29 +55,29 @@ async function getTag(req, res) {
     }
 }
 
-async function insertTag(req, res) {
+async function insertSensor(req, res) {
     try {
         var authorization = req.headers.authorization;
         if (await mongo.authenticate(authorization)) {
-            var tag_id = req.body.tag_id;
-            if (utils.isEmpty(tag_id)) {
-                res.status(400).send(new utils.Error(`tag_id is empty!`));
+            var sensor_id = req.body.sensor_id;
+            if (utils.isEmpty(sensor_id)) {
+                res.status(400).send(new utils.Error(`sensor_id is empty!`));
             } else {
                 var ownerKey = utils.getOwnerKey(authorization);
-                var tagsRetrieved = await mongo.findDB(collection, {
-                    tag_id: tag_id,
+                var sensorsRetrieved = await mongo.findDB(collection, {
+                    sensor_id: sensor_id,
                     owner: ownerKey
                 });
-                if (!utils.isEmpty(tagsRetrieved)) {
-                    res.status(406).send(new utils.Error(`Tag '${tag_id}' is already in database!`));
+                if (!utils.isEmpty(sensorsRetrieved)) {
+                    res.status(406).send(new utils.Error(`Sensor '${sensor_id}' is already in database!`));
                 } else {
-                    var fullRequest = new TagInsert(req.body);
+                    var fullRequest = new SensorInsert(req.body);
                     fullRequest.owner = ownerKey;
                     var data = await mongo.insertDB(collection, fullRequest);
                     if (data.result.n > 0) {
-                        res.status(201).send(new utils.Success(`Tag '${tag_id}' inserted!`));
+                        res.status(201).send(new utils.Success(`Sensor '${sensor_id}' inserted!`));
                     } else {
-                        res.status(406).send(new utils.Error(`Tag '${tag_id}' failed to insert, contact an admin for help`));
+                        res.status(406).send(new utils.Error(`Sensor '${sensor_id}' failed to insert, contact an admin for help`));
                     }
                 }
             }
@@ -94,22 +92,22 @@ async function insertTag(req, res) {
     }
 }
 
-async function updateTag(req, res) {
+async function updateSensor(req, res) {
     try {
         var authorization = req.headers.authorization;
         if (await mongo.authenticate(authorization)) {
-            var tag_id = req.params.tag_id;
+            var sensor_id = req.params.sensor_id;
             var ownerKey = utils.getOwnerKey(authorization);
             var data = await mongo.updateDB(collection, {
-                tag_id: tag_id,
+                sensor_id: sensor_id,
                 owner: ownerKey
             }, {
-                $set: new TagUpdate(req.body)
+                $set: new SensorUpdate(req.body)
             });
             if (data.result.nModified > 0 || data.result.n > 0) {
-                res.send(new utils.Success(`Tag '${tag_id}' updated!`));
+                res.send(new utils.Success(`Sensor '${sensor_id}' updated!`));
             } else {
-                res.status(406).send(new utils.Error(`Tag '${tag_id}' failed to update, verify if the id is correct and try again`));
+                res.status(406).send(new utils.Error(`Sensor '${sensor_id}' failed to update, verify if the id is correct and try again`));
             }
         } else {
             res.status(401).send();
@@ -120,20 +118,20 @@ async function updateTag(req, res) {
     }
 }
 
-async function deleteTag(req, res) {
+async function deleteSensor(req, res) {
     try {
         var authorization = req.headers.authorization;
         if (await mongo.authenticate(authorization)) {
-            var tag_id = req.params.tag_id;
+            var sensor_id = req.params.sensor_id;
             var ownerKey = utils.getOwnerKey(authorization);
             var data = await mongo.deleteDB(collection, {
-                tag_id: tag_id,
+                sensor_id: sensor_id,
                 owner: ownerKey
             });
             if (data.result.n > 0) {
-                res.send(new utils.Success(`Tag '${tag_id}' deleted!`));
+                res.send(new utils.Success(`Sensor '${sensor_id}' deleted!`));
             } else {
-                res.status(406).send(new utils.Error(`Tag '${tag_id}' failed to delete, verify if the id is correct and try again`));
+                res.status(406).send(new utils.Error(`Sensor '${sensor_id}' failed to delete, verify if the id is correct and try again`));
             }
         } else {
             res.status(401).send();
@@ -144,14 +142,14 @@ async function deleteTag(req, res) {
     }
 }
 
-class TagInsert {
-    constructor(tag) {
-        this.tag_id = tag.tag_id;
-        this.name   = tag.name;
+class SensorInsert {
+    constructor(sensor) {
+        this.sensor_id  = sensor.sensor_id;
+        this.name       = sensor.name;
     }
 }
-class TagUpdate {
-    constructor(tag) {
-        this.name = tag.name;
+class SensorUpdate {
+    constructor(sensor) {
+        this.name = sensor.name;
     }
 }

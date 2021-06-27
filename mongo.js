@@ -1,65 +1,64 @@
-const {
-    MongoClient
-} = require('mongodb'),
-    utils = require('utils.js');
-    var dbUrl = "",
+const { MongoClient } = require('mongodb'),
+                utils = require('utils.js');
+var dbUrl = "",
     config = "",
-    cluster = "";
-    
-    try {
-        config = require('config.json');
-        cluster = config.mongoCluster;
-        dbUrl = config.mongoUrl;
-    } catch (error) {
-        cluster = process.env.mongoCluster;
-        dbUrl = process.env.mongoUrl;
-    }
+    database = "";
+
+try {
+    config = require('config.json');
+    database = config.mongoDatabase;
+    dbUrl = config.mongoUrl;
+} catch (error) {
+    database = process.env.mongoDatabase;
+    dbUrl = process.env.mongoUrl;
+}
 
 async function authenticate(authorization) {
 
     var basicData = utils.getBasicAuthData(authorization);
+    // console.log('basicData')
+    // console.log(basicData)
 
     var users = await findDB('users', basicData);
+    // console.log('users')
+    // console.log(users)
 
     return users.length;
 
 }
 
 async function findDB(collection, data) {
-
-    const url = dbUrl;
-
     let client, db;
     try {
-        client = await MongoClient.connect(url, {
+        client = await MongoClient.connect(dbUrl, {
             useUnifiedTopology: true
         });
 
-        db = client.db(cluster);
+        db = client.db(database);
 
         let dCollection = db.collection(collection);
 
         let result = await dCollection.find(data).toArray();
+
+        removeExclusiveData(result);
 
         return result;
 
     } catch (err) {
         console.error(err);
     } finally {
-        client.close();
+        if (!utils.isUndefined(client))
+            client.close();
     }
 }
 
 async function insertDB(collection, data) {
-
-    const url =dbUrl;
-
     try {
-        client = await MongoClient.connect(url, {
+        client = await MongoClient.connect(dbUrl, {
             useUnifiedTopology: true
         });
 
-        db = client.db(cluster);
+        db = client.db(database);
 
         let dCollection = db.collection(collection);
 
@@ -70,20 +69,18 @@ async function insertDB(collection, data) {
     } catch (err) {
         console.error(err);
     } finally {
-        client.close();
+        if (!utils.isUndefined(client))
+            client.close();
     }
 }
 
 async function updateDB(collection, keyData, data) {
-
-    const url = dbUrl;
-
     try {
-        client = await MongoClient.connect(url, {
+        client = await MongoClient.connect(dbUrl, {
             useUnifiedTopology: true
         });
 
-        db = client.db(cluster);
+        db = client.db(database);
 
         let dCollection = db.collection(collection);
 
@@ -94,20 +91,18 @@ async function updateDB(collection, keyData, data) {
     } catch (err) {
         console.error(err);
     } finally {
-        client.close();
+        if (!utils.isUndefined(client))
+            client.close();
     }
 }
 
 async function deleteDB(collection, keyData) {
-
-    const url = dbUrl;
-
     try {
-        client = await MongoClient.connect(url, {
+        client = await MongoClient.connect(dbUrl, {
             useUnifiedTopology: true
         });
 
-        db = client.db(cluster);
+        db = client.db(database);
 
         let dCollection = db.collection(collection);
 
@@ -118,7 +113,20 @@ async function deleteDB(collection, keyData) {
     } catch (err) {
         console.error(err);
     } finally {
-        client.close();
+        if (!utils.isUndefined(client))
+            client.close();
+    }
+}
+
+function removeExclusiveData(json) {
+    if (utils.isIterable(json)) {
+        for (var index in json) {
+            delete json[index]['_id'];
+            delete json[index]['owner'];
+        }
+    } else {
+        delete json['_id'];
+        delete json['owner'];
     }
 }
 
