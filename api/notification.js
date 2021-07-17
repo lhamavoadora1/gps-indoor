@@ -10,7 +10,6 @@ router.post('/', insertNotification);
 // router.delete('/:timestamp', deleteNotification);
 module.exports = router;
 
-
 async function getAllNotifications(req, res) {
     var authorization = req.headers.authorization;
     if (await mongo.authenticate(authorization)) {
