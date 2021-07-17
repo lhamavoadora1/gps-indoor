@@ -5,16 +5,15 @@ var cors = require('cors');
 var app = express();
 app.use(cors());
 
-var bodyParser = require('body-parser'),
-port = process.env.PORT || 5000
+var port = process.env.PORT || 5000
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({limit: '50mb', extended: false}));
 
+app.use('/image', require('api/image'));
 app.use('/notification', require('api/notification'));
 app.use('/sensor', require('api/sensor'));
 app.use('/tag', require('api/tag'));
 app.use('/user', require('api/user'));
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
-
