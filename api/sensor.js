@@ -146,10 +146,14 @@ class SensorInsert {
     constructor(sensor) {
         this.sensor_id  = sensor.sensor_id;
         this.name       = sensor.name;
+        this.pos_x      = sensor.pos_x;
+	    this.pos_y      = sensor.pos_y;
     }
 }
 class SensorUpdate {
     constructor(sensor) {
         this.name = sensor.name;
+        this.pos_x      = sensor.pos_x;
+	    this.pos_y      = sensor.pos_y;
     }
 }

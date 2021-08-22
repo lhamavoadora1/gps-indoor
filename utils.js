@@ -37,6 +37,20 @@ function isIterable(obj) {
     return typeof obj[Symbol.iterator] === 'function';
 }
 
+function getFormattedTime(timestamp) {
+    var date = new Date(timestamp);
+    var hours = date.getHours();
+    var minutes = "0" + date.getMinutes();
+    var seconds = "0" + date.getSeconds();
+    var formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+    return formattedTime;
+}
+
+function getFormattedDate(timestamp) {
+    var date = new Date(timestamp);
+    return date.getDate();
+}
+
 class Success {
     constructor(message) {
         this.success = true;
@@ -58,6 +72,8 @@ module.exports = {
     getBasicAuthData,
     getOwnerKey,
     isIterable,
+    getFormattedTime,
+    getFormattedDate,
     Success,
     Error
 };
