@@ -118,6 +118,28 @@ async function deleteDB(collection, keyData) {
     }
 }
 
+async function deleteManyDB(collection, keyData) {
+    try {
+        client = await MongoClient.connect(dbUrl, {
+            useUnifiedTopology: true
+        });
+
+        db = client.db(database);
+
+        let dCollection = db.collection(collection);
+
+        let result = await dCollection.deleteMany(keyData);
+
+        return result;
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        if (!utils.isUndefined(client))
+            client.close();
+    }
+}
+
 function removeExclusiveData(json) {
     if (utils.isIterable(json)) {
         for (var index in json) {
@@ -135,5 +157,6 @@ module.exports = {
     findDB,
     insertDB,
     updateDB,
-    deleteDB
+    deleteDB,
+    deleteManyDB
 };
