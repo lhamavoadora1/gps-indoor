@@ -51,6 +51,16 @@ function getFormattedDate(timestamp) {
     return date.getDate();
 }
 
+function checkSizeInBytes(str) {
+    var bodyLimitSize = 16777216;
+    var size = Buffer.byteLength(str, 'utf8');
+    // console.log(`${str} : ${str.length} characters\n${size} bytes`);
+    if (size > bodyLimitSize) {
+        return false;
+    }
+    return true;
+}
+
 class Success {
     constructor(message) {
         this.success = true;
@@ -74,6 +84,7 @@ module.exports = {
     isIterable,
     getFormattedTime,
     getFormattedDate,
+    checkSizeInBytes,
     Success,
     Error
 };
