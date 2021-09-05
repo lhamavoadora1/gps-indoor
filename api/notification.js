@@ -292,6 +292,6 @@ client.on('message', async function (topic, message) {
     console.log(message.toString());
     var notification = new NotificationInsert(JSON.parse(message.toString()));
     console.log(notification);
-    // insertNotification(notification);
+    insertNotification(notification);
     // client.end();
 });
