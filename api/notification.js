@@ -12,80 +12,21 @@ router.delete('/:sensor_id/:timestamp', deleteNotification);
 module.exports = router;
 
 async function getAllNotifications(req, res) {
-    var authorization = req.headers.authorization;
-    if (await mongo.authenticate(authorization)) {
-        var sensor_id_list = [];
-        var ownerKey = utils.getOwnerKey(authorization);
-        var sensorsRetrieved = await mongo.findDB('sensors', {
-            owner: ownerKey
-        });
-        if (!utils.isEmpty(sensorsRetrieved)) {
-            sensorsRetrieved.forEach(function (item, index, array) {
-                sensor_id_list.push({sensor_id:item.sensor_id});
-            });
-            var notificationsRetrieved = await mongo.findDB(collection, {
-                $or: sensor_id_list
-            });
-            if (!utils.isEmpty(notificationsRetrieved)) {
-                res.send({
-                    notificationsRetrieved
-                });
-            } else {
-                res.status(204).send();
-            }
-        } else {
-            res.status(204).send();
-        }
-    } else {
-        res.status(401).send();
-    }
-}
-
-async function getNotification(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
-            var sensor_id = req.params.sensor_id;
-            var timestampsReceived = req.params.timestamp;
-            // console.log(sensor_id);
-            // console.log(timestampsReceived);
-            if (timestampsReceived) {
-                var filter = getFilterFromTimestamps(timestampsReceived);
-                if (filter) {
-                    var query;
-                    if (!filter.$and) {
-                        query = {
-                            sensor_id: sensor_id,
-                            timestamp: filter
-                        }
-                        // console.log({
-                        //     sensor_id: sensor_id,
-                        //     timestamp: filter
-                        // });
-                    } else {
-                        query = {
-                            sensor_id: sensor_id,
-                            $and: filter.$and
-                        }
-                        // console.log({
-                        //     sensor_id: sensor_id,
-                        //     $and: filter.$and
-                        // });
-                    }
-                    var notificationsRetrieved = await mongo.findDB(collection, query);
-                    if (!utils.isEmpty(notificationsRetrieved)) {
-                        res.send({
-                            notificationsRetrieved
-                        });
-                    } else {
-                        res.status(204).send();
-                    }
-                } else {
-                    res.status(406).send(new utils.Error(`URL is malformed!`));
-                }
-            } else {
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
+            var sensor_id_list = [];
+            var sensorsRetrieved = await mongo.findDB('sensors', {
+                owner: ownerKey
+            });
+            if (!utils.isEmpty(sensorsRetrieved)) {
+                sensorsRetrieved.forEach(function (item, index, array) {
+                    sensor_id_list.push({sensor_id:item.sensor_id});
+                });
                 var notificationsRetrieved = await mongo.findDB(collection, {
-                    sensor_id: sensor_id
+                    $or: sensor_id_list
                 });
                 if (!utils.isEmpty(notificationsRetrieved)) {
                     res.send({
@@ -93,6 +34,81 @@ async function getNotification(req, res) {
                     });
                 } else {
                     res.status(204).send();
+                }
+            } else {
+                res.status(204).send();
+            }
+        } else {
+            res.status(401).send();
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(new utils.Error(err));
+    }
+}
+
+async function getNotification(req, res) {
+    try {
+        var authorization = req.headers.authorization;
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
+            var sensor_id = req.params.sensor_id;
+            var sensorsRetrieved = await mongo.findDB('sensors', {
+                sensor_id: sensor_id,
+                owner: ownerKey
+            });
+            if (utils.isEmpty(sensorsRetrieved)) {
+                res.status(406).send(new utils.Error(`No sensor ${fullRequest.sensor_id} found!`));
+            } else {
+                var timestampsReceived = req.params.timestamp;
+                // console.log(sensor_id);
+                // console.log(timestampsReceived);
+                if (timestampsReceived) {
+                    var filter = getFilterFromTimestamps(timestampsReceived);
+                    if (filter) {
+                        var query;
+                        if (!filter.$and) {
+                            query = {
+                                sensor_id: sensor_id,
+                                timestamp: filter
+                            }
+                            // console.log({
+                            //     sensor_id: sensor_id,
+                            //     timestamp: filter
+                            // });
+                        } else {
+                            query = {
+                                sensor_id: sensor_id,
+                                $and: filter.$and
+                            }
+                            // console.log({
+                            //     sensor_id: sensor_id,
+                            //     $and: filter.$and
+                            // });
+                        }
+                        var notificationsRetrieved = await mongo.findDB(collection, query);
+                        if (!utils.isEmpty(notificationsRetrieved)) {
+                            res.send({
+                                notificationsRetrieved
+                            });
+                        } else {
+                            res.status(204).send();
+                        }
+                    } else {
+                        res.status(406).send(new utils.Error(`URL is malformed!`));
+                    }
+                } else {
+                    var notificationsRetrieved = await mongo.findDB(collection, {
+                        sensor_id: sensor_id
+                    });
+                    if (!utils.isEmpty(notificationsRetrieved)) {
+                        res.send({
+                            notificationsRetrieved
+                        });
+                    } else {
+                        res.status(204).send();
+                    }
                 }
             }
         } else {
@@ -130,9 +146,10 @@ async function insertNotification(fullRequest) {
 async function deleteAllNotifications(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
             var sensor_id_list = [];
-            var ownerKey = utils.getOwnerKey(authorization);
             var sensorsRetrieved = await mongo.findDB('sensors', {
                 owner: ownerKey
             });
@@ -143,12 +160,6 @@ async function deleteAllNotifications(req, res) {
                 var data = await mongo.deleteManyDB(collection, {
                     $or: sensor_id_list
                 });
-                
-                // console.log({
-                //     $or: sensor_id_list
-                // });
-                // console.log(data);
-
                 if (data.result.n > 0) {
                     res.send(new utils.Success(`All notifications deleted!`));
                 } else {
@@ -169,38 +180,38 @@ async function deleteAllNotifications(req, res) {
 async function deleteNotification(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
             var sensor_id = req.params.sensor_id;
-            var timestampsReceived = req.params.timestamp;
-            // console.log(sensor_id);
-            // console.log(timestampsReceived);
-            var filter = getFilterFromTimestamps(timestampsReceived);
-            if (filter) {
-                var query;
-                if (!filter.$and) {
-                    query = {
-                        sensor_id: sensor_id,
-                        timestamp: filter
+            var sensorsRetrieved = await mongo.findDB('sensors', {
+                sensor_id: sensor_id,
+                owner: ownerKey
+            });
+            if (utils.isEmpty(sensorsRetrieved)) {
+                res.status(406).send(new utils.Error(`No sensor ${fullRequest.sensor_id} found!`));
+            } else {
+                var timestampsReceived = req.params.timestamp;
+                var filter = getFilterFromTimestamps(timestampsReceived);
+                if (filter) {
+                    var query;
+                    if (!filter.$and) {
+                        query = {
+                            sensor_id: sensor_id,
+                            timestamp: filter
+                        }
+                    } else {
+                        query = {
+                            sensor_id: sensor_id,
+                            $and: filter.$and
+                        }
                     }
-                    // console.log({
-                    //     sensor_id: sensor_id,
-                    //     timestamp: filter
-                    // });
-                } else {
-                    query = {
-                        sensor_id: sensor_id,
-                        $and: filter.$and
+                    var data = await mongo.deleteManyDB(collection, query);
+                    if (data.result.n > 0) {
+                        res.send(new utils.Success(`Notification(s) deleted!`));
+                    } else {
+                        res.status(406).send(new utils.Error(`Notification(s) failed to delete, verify if the timestamp is correct and try again`));
                     }
-                    // console.log({
-                    //     sensor_id: sensor_id,
-                    //     $and: filter.$and
-                    // });
-                }
-                var data = await mongo.deleteManyDB(collection, query);
-                if (data.result.n > 0) {
-                    res.send(new utils.Success(`Notification(s) deleted!`));
-                } else {
-                    res.status(406).send(new utils.Error(`Notification(s) failed to delete, verify if the timestamp is correct and try again`));
                 }
             }
         } else {
@@ -216,11 +227,6 @@ function getFilterFromTimestamps(timestampsReceived) {
     if (timestampsReceived) {
         var filter;
         var timestamps = timestampsReceived.split('-');
-        // console.log('timestamps');
-        // console.log(timestamps);
-        // console.log(typeof timestamps);
-        // console.log('length');
-        // console.log(timestamps.length);
         if (timestamps.length > 1) {
             var firstFilter = timestamps[0].trim();
             var secondFilter = timestamps[1].trim();
@@ -286,6 +292,6 @@ client.on('message', async function (topic, message) {
     console.log(message.toString());
     var notification = new NotificationInsert(JSON.parse(message.toString()));
     console.log(notification);
-    insertNotification(notification);
+    // insertNotification(notification);
     // client.end();
 });

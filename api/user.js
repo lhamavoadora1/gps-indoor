@@ -4,30 +4,32 @@ const express = require('express'),
     collection = 'users';
 
 var router = express.Router();
-router.get('/', getUser);
+// router.get('/', getUser);
 router.patch('/', updateUser);
 module.exports = router;
 
-async function getUser(req, res) {
-    try {
-        if (await mongo.authenticate(req.headers.authorization)) {
-            res.json(new utils.Success('User found!'))
-        } else {
-            res.status(204).send();
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).send(new utils.Error(err));
-    }
-}
+// async function getUser(req, res) {
+//     try {
+//         if (await mongo.authenticate(req.headers.authorization)) {
+//             res.json(new utils.Success('User found!'))
+//         } else {
+//             res.status(204).send();
+//         }
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).send(new utils.Error(err));
+//     }
+// }
 
 async function updateUser(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
-            var basicData = utils.getBasicAuthData(authorization);
-            var data = await mongo.updateDB(collection, basicData, {
-                $set: req.body
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var data = await mongo.updateDB(collection, {
+                username: utils.getOwnerName(authData.owner)
+            }, {
+                $set: new UserUpdate(req.body)
             });
             if (data.result.nModified > 0 || data.result.n > 0) {
                 res.json(new utils.Success(`Password updated!`));
@@ -40,5 +42,11 @@ async function updateUser(req, res) {
     } catch (err) {
         console.error(err);
         res.status(500).send(new utils.Error(err));
+    }
+}
+
+class UserUpdate {
+    constructor(user) {
+        this.password = user.password;
     }
 }
