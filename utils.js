@@ -6,28 +6,31 @@ function isEmpty(obj) {
     return (isUndefined(obj) || obj == null || obj.length == 0);
 }
 
-function getBase64Auth(authorization) {
+function getAuthToken(authorization) {
     return (authorization || '').split(' ')[1] || '';
 }
 
 function getBasicAuthData(authorization) {
-
-    const b64auth = getBase64Auth(authorization);
+    const b64auth = getAuthToken(authorization);
     const [user, pass] = Buffer.from(b64auth, 'base64').toString().split(':');
-
     return {username: user, password: pass};
+}
 
+function getBearerData(authorization) {
+    const token = getAuthToken(authorization);
+    return {hash: token};
 }
 
 function getOwnerKey(authorization) {
-
-    const b64auth = getBase64Auth(authorization);
+    const b64auth = getAuthToken(authorization);
     const [user, pass] = Buffer.from(b64auth, 'base64').toString().split(':');
-
     var ownerKey = Buffer.from(user).toString('base64');
-
     return ownerKey;
+}
 
+function getOwnerName(ownerKey) {
+    const username = Buffer.from(ownerKey, 'base64').toString();
+    return username;
 }
 
 function isIterable(obj) {
@@ -35,6 +38,15 @@ function isIterable(obj) {
         return false;
     }
     return typeof obj[Symbol.iterator] === 'function';
+}
+
+function createHash() {
+    var crypto = require('crypto');
+    var current_date = (new Date()).valueOf().toString();
+    var random = Math.random().toString();
+    var hash = crypto.createHash('sha1').update(current_date + random).digest('hex');
+    // console.log(`hash => ${hash}`);
+    return hash;
 }
 
 function getFormattedTime(timestamp) {
@@ -78,13 +90,15 @@ class Error {
 module.exports = {
     isUndefined,
     isEmpty,
-    getBase64Auth,
     getBasicAuthData,
+    getBearerData,
     getOwnerKey,
+    getOwnerName,
     isIterable,
     getFormattedTime,
     getFormattedDate,
     checkSizeInBytes,
+    createHash,
     Success,
     Error
 };

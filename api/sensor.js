@@ -13,8 +13,9 @@ module.exports = router;
 
 async function getAllSensors(req, res) {
     var authorization = req.headers.authorization;
-    if (await mongo.authenticate(authorization)) {
-        var ownerKey = utils.getOwnerKey(authorization);
+    var authData = await mongo.authenticateToken(authorization);
+    if (authData) {
+        var ownerKey = authData.owner;
         var sensorsRetrieved = await mongo.findDB(collection, {
             owner: ownerKey
         });
@@ -33,8 +34,9 @@ async function getAllSensors(req, res) {
 async function getSensor(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
-            var ownerKey = utils.getOwnerKey(authorization);
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
             var sensorsRetrieved = await mongo.findDB(collection, {
                 sensor_id: req.params.sensor_id,
                 owner: ownerKey
@@ -58,12 +60,13 @@ async function getSensor(req, res) {
 async function insertSensor(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
             var sensor_id = req.body.sensor_id;
             if (utils.isEmpty(sensor_id)) {
                 res.status(400).send(new utils.Error(`sensor_id is empty!`));
             } else {
-                var ownerKey = utils.getOwnerKey(authorization);
+                var ownerKey = authData.owner;
                 var sensorsRetrieved = await mongo.findDB(collection, {
                     sensor_id: sensor_id,
                     owner: ownerKey
@@ -95,9 +98,10 @@ async function insertSensor(req, res) {
 async function updateSensor(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
             var sensor_id = req.params.sensor_id;
-            var ownerKey = utils.getOwnerKey(authorization);
+            var ownerKey = authData.owner;
             var data = await mongo.updateDB(collection, {
                 sensor_id: sensor_id,
                 owner: ownerKey
@@ -121,9 +125,10 @@ async function updateSensor(req, res) {
 async function deleteSensor(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
             var sensor_id = req.params.sensor_id;
-            var ownerKey = utils.getOwnerKey(authorization);
+            var ownerKey = authData.owner;
             var data = await mongo.deleteDB(collection, {
                 sensor_id: sensor_id,
                 owner: ownerKey

@@ -14,36 +14,41 @@ try {
 }
 
 async function authenticate(authorization) {
-
     var basicData = utils.getBasicAuthData(authorization);
     // console.log('basicData')
     // console.log(basicData)
-
     var users = await findDB('users', basicData);
     // console.log('users')
     // console.log(users)
-
     return users.length;
+}
 
+async function authenticateToken(authorization) {
+    var tokenData = utils.getBearerData(authorization);
+    // console.log('tokenData')
+    // console.log(tokenData)
+    var oauth = await findDBRaw('oauth', tokenData);
+    // console.log('oauth')
+    // console.log(oauth)
+    return oauth[0];
 }
 
 async function findDB(collection, data) {
+    var result = await findDBRaw(collection, data);
+    removeExclusiveData(result);
+    return result;
+}
+
+async function findDBRaw(collection, data) {
     let client, db;
     try {
         client = await MongoClient.connect(dbUrl, {
             useUnifiedTopology: true
         });
-
         db = client.db(database);
-
         let dCollection = db.collection(collection);
-
         let result = await dCollection.find(data).toArray();
-
-        removeExclusiveData(result);
-
         return result;
-
     } catch (err) {
         console.error(err);
     } finally {
@@ -53,19 +58,15 @@ async function findDB(collection, data) {
 }
 
 async function insertDB(collection, data) {
+    let client, db;
     try {
         client = await MongoClient.connect(dbUrl, {
             useUnifiedTopology: true
         });
-
         db = client.db(database);
-
         let dCollection = db.collection(collection);
-
         let result = await dCollection.insertOne(data);
-
         return result;
-
     } catch (err) {
         console.error(err);
     } finally {
@@ -75,19 +76,15 @@ async function insertDB(collection, data) {
 }
 
 async function updateDB(collection, keyData, data) {
+    let client, db;
     try {
         client = await MongoClient.connect(dbUrl, {
             useUnifiedTopology: true
         });
-
         db = client.db(database);
-
         let dCollection = db.collection(collection);
-
         let result = await dCollection.updateOne(keyData, data);
-
         return result;
-
     } catch (err) {
         console.error(err);
     } finally {
@@ -97,19 +94,15 @@ async function updateDB(collection, keyData, data) {
 }
 
 async function deleteDB(collection, keyData) {
+    let client, db;
     try {
         client = await MongoClient.connect(dbUrl, {
             useUnifiedTopology: true
         });
-
         db = client.db(database);
-
         let dCollection = db.collection(collection);
-
         let result = await dCollection.deleteOne(keyData);
-
         return result;
-
     } catch (err) {
         console.error(err);
     } finally {
@@ -119,19 +112,15 @@ async function deleteDB(collection, keyData) {
 }
 
 async function deleteManyDB(collection, keyData) {
+    let client, db;
     try {
         client = await MongoClient.connect(dbUrl, {
             useUnifiedTopology: true
         });
-
         db = client.db(database);
-
         let dCollection = db.collection(collection);
-
         let result = await dCollection.deleteMany(keyData);
-
         return result;
-
     } catch (err) {
         console.error(err);
     } finally {
@@ -154,6 +143,7 @@ function removeExclusiveData(json) {
 
 module.exports = {
     authenticate,
+    authenticateToken,
     findDB,
     insertDB,
     updateDB,

@@ -13,8 +13,9 @@ module.exports = router;
 async function getImage(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
-            var ownerKey = utils.getOwnerKey(authorization);
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
             var imagesRetrieved = await mongo.findDB(collection, {
                 image_name: req.params.image_name,
                 owner: ownerKey
@@ -39,12 +40,13 @@ async function insertImage(req, res) {
     try {
         if (utils.checkSizeInBytes(JSON.stringify(new ImageInsert(req.body)))) {
             var authorization = req.headers.authorization;
-            if (await mongo.authenticate(authorization)) {
+            var authData = await mongo.authenticateToken(authorization);
+            if (authData) {
                 var image_name = req.body.image_name;
                 if (utils.isEmpty(image_name)) {
                     res.status(400).send(new utils.Error(`image_name is empty!`));
                 } else {
-                    var ownerKey = utils.getOwnerKey(authorization);
+                    var ownerKey = authData.owner;
                     var imagesRetrieved = await mongo.findDB(collection, {
                         image_name: image_name,
                         owner: ownerKey
@@ -80,9 +82,10 @@ async function updateImage(req, res) {
     try {
         if (utils.checkSizeInBytes(JSON.stringify(new ImageInsert(req.body)))) {
             var authorization = req.headers.authorization;
-            if (await mongo.authenticate(authorization)) {
+            var authData = await mongo.authenticateToken(authorization);
+            if (authData) {
                 var image_name = req.params.image_name;
-                var ownerKey = utils.getOwnerKey(authorization);
+                var ownerKey = authData.owner;
                 var data = await mongo.updateDB(collection, {
                     image_name: image_name,
                     owner: ownerKey
@@ -109,9 +112,10 @@ async function updateImage(req, res) {
 async function deleteImage(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
             var image_name = req.params.image_name;
-            var ownerKey = utils.getOwnerKey(authorization);
+            var ownerKey = authData.owner;
             var data = await mongo.deleteDB(collection, {
                 image_name: image_name,
                 owner: ownerKey

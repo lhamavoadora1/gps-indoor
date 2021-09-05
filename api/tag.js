@@ -15,8 +15,9 @@ module.exports = router;
 
 async function getAllTags(req, res) {
     var authorization = req.headers.authorization;
-    if (await mongo.authenticate(authorization)) {
-        var ownerKey = utils.getOwnerKey(authorization);
+    var authData = await mongo.authenticateToken(authorization);
+    if (authData) {
+        var ownerKey = authData.owner;
         var tagsRetrieved = await mongo.findDB(collection, {
             owner: ownerKey
         });
@@ -35,8 +36,9 @@ async function getAllTags(req, res) {
 async function getTag(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
-            var ownerKey = utils.getOwnerKey(authorization);
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
             var tagsRetrieved = await mongo.findDB(collection, {
                 tag_id: req.params.tag_id,
                 owner: ownerKey
@@ -60,12 +62,13 @@ async function getTag(req, res) {
 async function insertTag(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
             var tag_id = req.body.tag_id;
             if (utils.isEmpty(tag_id)) {
                 res.status(400).send(new utils.Error(`tag_id is empty!`));
             } else {
-                var ownerKey = utils.getOwnerKey(authorization);
+                var ownerKey = authData.owner;
                 var tagsRetrieved = await mongo.findDB(collection, {
                     tag_id: tag_id,
                     owner: ownerKey
@@ -97,9 +100,10 @@ async function insertTag(req, res) {
 async function updateTag(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
             var tag_id = req.params.tag_id;
-            var ownerKey = utils.getOwnerKey(authorization);
+            var ownerKey = authData.owner;
             var data = await mongo.updateDB(collection, {
                 tag_id: tag_id,
                 owner: ownerKey
@@ -123,9 +127,10 @@ async function updateTag(req, res) {
 async function deleteTag(req, res) {
     try {
         var authorization = req.headers.authorization;
-        if (await mongo.authenticate(authorization)) {
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
             var tag_id = req.params.tag_id;
-            var ownerKey = utils.getOwnerKey(authorization);
+            var ownerKey = authData.owner;
             var data = await mongo.deleteDB(collection, {
                 tag_id: tag_id,
                 owner: ownerKey
