@@ -1,7 +1,8 @@
 const express = require('express'),
-    mongo = require('mongo.js'),
-    utils = require('utils.js'),
-    collection = 'notifications';
+        mongo = require('mongo.js'),
+        utils = require('utils.js'),
+   collection = 'notifications',
+      process = require('process.json');
 
 var router = express.Router();
 router.get('/', getAllNotifications);
@@ -324,12 +325,12 @@ class NotificationInsert {
 
 var mqtt = require('mqtt');
 var options = {
-    port: 1883,
+    port: process.env.mqtt.port,
     reconnectPeriod: 1
 };
 
-var broker = 'mqtt://52.14.171.32/';
-var topic = 'Antenna001';
+var broker = process.env.mqtt.broker;
+var topic = process.env.mqtt.topic;
 
 var client = mqtt.connect(broker, options);
 
