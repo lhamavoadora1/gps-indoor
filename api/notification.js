@@ -325,12 +325,12 @@ class NotificationInsert {
 
 var mqtt = require('mqtt');
 var options = {
-    port: process.env.mqtt.port,
+    port: process.env.mqttPort,
     reconnectPeriod: 1
 };
 
-var broker = process.env.mqtt.broker;
-var topic = process.env.mqtt.topic;
+var broker = process.env.mqttBroker;
+var topic = process.env.mqttTopic;
 
 var client = mqtt.connect(broker, options);
 
