@@ -1,8 +1,11 @@
 const express = require('express'),
         mongo = require('mongo.js'),
         utils = require('utils.js'),
-   collection = 'notifications',
-      process = require('process.json');
+   collection = 'notifications';
+
+var process;
+if (!process)
+    process = require('process.json');
 
 var router = express.Router();
 router.get('/', getAllNotifications);

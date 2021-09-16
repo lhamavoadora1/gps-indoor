@@ -1,6 +1,9 @@
 const { MongoClient } = require('mongodb'),
-                utils = require('utils.js'),
-              process = require('process.json');
+                utils = require('utils.js');
+
+var process;
+if (!process)
+    process = require('process.json');
 
 var database = process.env.mongoDatabase,
        dbUrl = process.env.mongoUrl;
