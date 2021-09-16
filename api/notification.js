@@ -5,8 +5,10 @@ const express = require('express'),
 
 var router = express.Router();
 router.get('/', getAllNotifications);
-router.get('/:sensor_id/', getNotification);
-router.get('/:sensor_id/:timestamp', getNotification);
+router.get('/sensor/:sensor_id/', getSensorNotification);
+router.get('/sensor/:sensor_id/:timestamp', getSensorNotification);
+router.get('/tag/:tag_id/', getTagNotification);
+router.get('/tag/:tag_id/:timestamp', getTagNotification);
 // router.delete('/', deleteAllNotifications);
 router.delete('/:sensor_id/:timestamp', deleteNotification);
 module.exports = router;
@@ -47,7 +49,7 @@ async function getAllNotifications(req, res) {
     }
 }
 
-async function getNotification(req, res) {
+async function getSensorNotification(req, res) {
     try {
         var authorization = req.headers.authorization;
         var authData = await mongo.authenticateToken(authorization);
@@ -59,11 +61,9 @@ async function getNotification(req, res) {
                 owner: ownerKey
             });
             if (utils.isEmpty(sensorsRetrieved)) {
-                res.status(406).send(new utils.Error(`No sensor ${fullRequest.sensor_id} found!`));
+                res.status(406).send(new utils.Error(`No sensor ${sensor_id} found!`));
             } else {
                 var timestampsReceived = req.params.timestamp;
-                // console.log(sensor_id);
-                // console.log(timestampsReceived);
                 if (timestampsReceived) {
                     var filter = getFilterFromTimestamps(timestampsReceived);
                     if (filter) {
@@ -73,19 +73,11 @@ async function getNotification(req, res) {
                                 sensor_id: sensor_id,
                                 timestamp: filter
                             }
-                            // console.log({
-                            //     sensor_id: sensor_id,
-                            //     timestamp: filter
-                            // });
                         } else {
                             query = {
                                 sensor_id: sensor_id,
                                 $and: filter.$and
                             }
-                            // console.log({
-                            //     sensor_id: sensor_id,
-                            //     $and: filter.$and
-                            // });
                         }
                         var notificationsRetrieved = await mongo.findDB(collection, query);
                         if (!utils.isEmpty(notificationsRetrieved)) {
@@ -101,6 +93,69 @@ async function getNotification(req, res) {
                 } else {
                     var notificationsRetrieved = await mongo.findDB(collection, {
                         sensor_id: sensor_id
+                    });
+                    if (!utils.isEmpty(notificationsRetrieved)) {
+                        res.send({
+                            notificationsRetrieved
+                        });
+                    } else {
+                        res.status(204).send();
+                    }
+                }
+            }
+        } else {
+            res.status(401).send();
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(new utils.Error(err));
+    }
+}
+
+async function getTagNotification(req, res) {
+    try {
+        var authorization = req.headers.authorization;
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
+            var tag_id = req.params.tag_id;
+            var sensorsRetrieved = await mongo.findDB('tags', {
+                tag_id: tag_id,
+                owner: ownerKey
+            });
+            if (utils.isEmpty(sensorsRetrieved)) {
+                res.status(406).send(new utils.Error(`No tag ${tag_id} found!`));
+            } else {
+                var timestampsReceived = req.params.timestamp;
+                if (timestampsReceived) {
+                    var filter = getFilterFromTimestamps(timestampsReceived);
+                    if (filter) {
+                        var query;
+                        if (!filter.$and) {
+                            query = {
+                                tag_id: tag_id,
+                                timestamp: filter
+                            }
+                        } else {
+                            query = {
+                                tag_id: tag_id,
+                                $and: filter.$and
+                            }
+                        }
+                        var notificationsRetrieved = await mongo.findDB(collection, query);
+                        if (!utils.isEmpty(notificationsRetrieved)) {
+                            res.send({
+                                notificationsRetrieved
+                            });
+                        } else {
+                            res.status(204).send();
+                        }
+                    } else {
+                        res.status(406).send(new utils.Error(`URL is malformed!`));
+                    }
+                } else {
+                    var notificationsRetrieved = await mongo.findDB(collection, {
+                        tag_id: tag_id
                     });
                     if (!utils.isEmpty(notificationsRetrieved)) {
                         res.send({
