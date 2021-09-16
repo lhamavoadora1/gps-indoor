@@ -1,7 +1,9 @@
 require('rootpath')();
 var express = require('express');
 var cors = require('cors');
-var process = require('process.json');
+var process;
+if (!process)
+    process = require('process.json');
 
 var app = express();
 app.use(cors());
