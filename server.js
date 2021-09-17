@@ -1,7 +1,11 @@
 require('rootpath')();
 var express = require('express');
 var cors = require('cors');
-var config = require('config.json');
+
+var config;
+try {
+    config = require('config.json');
+} catch (error) {}
 
 var app = express();
 app.use(cors());

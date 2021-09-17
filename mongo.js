@@ -1,6 +1,10 @@
 const { MongoClient } = require('mongodb'),
-                utils = require('utils.js'),
-               config = require('config.json');
+                utils = require('utils.js');
+
+var config;
+try {
+    config = require('config.json');
+} catch (error) {}
 
 var database = process.env.mongoDatabase || config.mongoDatabase,
        dbUrl = process.env.mongoUrl || config.mongoUrl;
