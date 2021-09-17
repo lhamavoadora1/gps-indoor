@@ -1,14 +1,12 @@
 require('rootpath')();
 var express = require('express');
 var cors = require('cors');
-var process;
-if (!process)
-    process = require('process.json');
+var config = require('config.json');
 
 var app = express();
 app.use(cors());
 
-var port = process.env.PORT;
+var port = process.env.PORT || config.PORT;
 
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb', extended: false}));
