@@ -1,12 +1,9 @@
 const { MongoClient } = require('mongodb'),
-                utils = require('utils.js');
+                utils = require('utils.js'),
+               config = require('config.json');
 
-var process;
-if (!process)
-    process = require('process.json');
-
-var database = process.env.mongoDatabase,
-       dbUrl = process.env.mongoUrl;
+var database = process.env.mongoDatabase || config.mongoDatabase,
+       dbUrl = process.env.mongoUrl || config.mongoUrl;
 
 async function authenticate(authorization) {
     var basicData = utils.getBasicAuthData(authorization);

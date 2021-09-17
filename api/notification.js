@@ -1,11 +1,8 @@
 const express = require('express'),
         mongo = require('mongo.js'),
         utils = require('utils.js'),
-   collection = 'notifications';
-
-var process;
-if (!process)
-    process = require('process.json');
+   collection = 'notifications',
+       config = require('config.json');
 
 var router = express.Router();
 router.get('/', getAllNotifications);
@@ -328,12 +325,12 @@ class NotificationInsert {
 
 var mqtt = require('mqtt');
 var options = {
-    port: process.env.mqttPort,
+    port: process.env.mqttPort || config.mqttPort,
     reconnectPeriod: 1
 };
 
-var broker = process.env.mqttBroker;
-var topic = process.env.mqttTopic;
+var broker = process.env.mqttBroker || config.mqttBroker;
+var topic = process.env.mqttTopic || config.mqttTopic;
 
 var client = mqtt.connect(broker, options);
 
@@ -341,7 +338,7 @@ client.on('connect', function () {
     console.log(`Connected to broker on ${broker}`);
     client.subscribe(topic, function (err) {
         if (!err) {
-            console.log(`Subscribed to ${topic}`);
+            console.log(`Subscribed to topic ${topic}`);
         }
     });
 });
