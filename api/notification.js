@@ -61,12 +61,12 @@ async function getSensorNotification(req, res) {
         if (authData) {
             var ownerKey = authData.owner;
             var sensor_id = req.params.sensor_id;
-            var sensorsRetrieved = await mongo.findDB('sensors', {
+            var sensorRetrieved = await mongo.findDB('sensors', {
                 sensor_id: sensor_id,
                 owner: ownerKey
             });
-            if (utils.isEmpty(sensorsRetrieved)) {
-                res.status(406).send(new utils.Error(`No sensor ${sensor_id} found!`));
+            if (utils.isEmpty(sensorRetrieved)) {
+                res.status(406).send(new utils.Error(`No sensor '${sensor_id}' found!`));
             } else {
                 var timestampsReceived = req.params.timestamp;
                 if (timestampsReceived) {
@@ -124,12 +124,12 @@ async function getTagNotification(req, res) {
         if (authData) {
             var ownerKey = authData.owner;
             var tag_id = req.params.tag_id;
-            var sensorsRetrieved = await mongo.findDB('tags', {
+            var tagRetrieved = await mongo.findDB('tags', {
                 tag_id: tag_id,
                 owner: ownerKey
             });
-            if (utils.isEmpty(sensorsRetrieved)) {
-                res.status(406).send(new utils.Error(`No tag ${tag_id} found!`));
+            if (utils.isEmpty(tagRetrieved)) {
+                res.status(406).send(new utils.Error(`No tag '${tag_id}' found!`));
             } else {
                 var timestampsReceived = req.params.timestamp;
                 if (timestampsReceived) {
@@ -188,12 +188,12 @@ async function insertNotification(fullRequest) {
         if (!utils.isEmpty(sensorsRetrieved)) {
             var data = await mongo.insertDB(collection, fullRequest);
             if (data.result.n > 0) {
-                console.log('Tag inserted!');
+                // console.log('Tag inserted!');
             } else {
-                console.log('Tag not inserted!');
+                // console.log('Tag not inserted!');
             }
         } else {
-            console.log(`No sensor ${fullRequest.sensor_id} found!`);
+            // console.log(`No sensor '${fullRequest.sensor_id}' found!`);
         }
     } catch (err) {
         console.log('Body from request may be in the wrong format:');
@@ -244,12 +244,12 @@ async function deleteNotification(req, res) {
         if (authData) {
             var ownerKey = authData.owner;
             var sensor_id = req.params.sensor_id;
-            var sensorsRetrieved = await mongo.findDB('sensors', {
+            var sensorRetrieved = await mongo.findDB('sensors', {
                 sensor_id: sensor_id,
                 owner: ownerKey
             });
-            if (utils.isEmpty(sensorsRetrieved)) {
-                res.status(406).send(new utils.Error(`No sensor ${fullRequest.sensor_id} found!`));
+            if (utils.isEmpty(sensorRetrieved)) {
+                res.status(406).send(new utils.Error(`No sensor '${fullRequest.sensor_id}' found!`));
             } else {
                 var timestampsReceived = req.params.timestamp;
                 var filter = getFilterFromTimestamps(timestampsReceived);
