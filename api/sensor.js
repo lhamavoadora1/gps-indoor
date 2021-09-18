@@ -148,17 +148,19 @@ async function deleteSensor(req, res) {
 }
 
 class SensorInsert {
-    constructor(sensor) {
-        this.sensor_id  = sensor.sensor_id;
-        this.name       = sensor.name;
-        this.pos_x      = sensor.pos_x;
-	    this.pos_y      = sensor.pos_y;
+    constructor(obj) {
+        this.sensor_id  = obj.sensor_id;
+        this.name       = obj.name;
+        this.pos_x      = obj.pos_x;
+	    this.pos_y      = obj.pos_y;
+	    this.sector_id  = obj.sector_id;
     }
 }
 class SensorUpdate {
-    constructor(sensor) {
-        this.name = sensor.name;
-        this.pos_x      = sensor.pos_x;
-	    this.pos_y      = sensor.pos_y;
+    constructor(obj) {
+        this.name       = obj.name;
+        this.pos_x      = obj.pos_x;
+	    this.pos_y      = obj.pos_y;
+	    this.sector_id  = obj.sector_id;
     }
 }
