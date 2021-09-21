@@ -63,10 +63,15 @@ async function insertSensor(req, res) {
         var authData = await mongo.authenticateToken(authorization);
         if (authData) {
             var sensor_id = req.body.sensor_id;
+            var map_id = req.body.map_id;
+            var ownerKey = authData.owner;
             if (utils.isEmpty(sensor_id)) {
                 res.status(400).send(new utils.Error(`sensor_id is empty!`));
+            } else if (utils.isEmpty(map_id)) {
+                res.status(400).send(new utils.Error(`map_id is empty!`));
+            } else if (utils.isEmpty(await mongo.findDB('maps', {map_id:map_id, owner:ownerKey}))) {
+                res.status(400).send(new utils.Error(`Map '${map_id}' not found!`));
             } else {
-                var ownerKey = authData.owner;
                 var sensorsRetrieved = await mongo.findDB(collection, {
                     sensor_id: sensor_id,
                     owner: ownerKey
@@ -102,16 +107,23 @@ async function updateSensor(req, res) {
         if (authData) {
             var sensor_id = req.params.sensor_id;
             var ownerKey = authData.owner;
-            var data = await mongo.updateDB(collection, {
-                sensor_id: sensor_id,
-                owner: ownerKey
-            }, {
-                $set: new SensorUpdate(req.body)
-            });
-            if (data.result.nModified > 0 || data.result.n > 0) {
-                res.send(new utils.Success(`Sensor '${sensor_id}' updated!`));
+            var map_id = req.body.map_id;
+            if (utils.isEmpty(map_id)) {
+                res.status(400).send(new utils.Error(`map_id is empty!`));
+            } else if (utils.isEmpty(await mongo.findDB('maps', {map_id:map_id, owner:ownerKey}))) {
+                res.status(400).send(new utils.Error(`Map '${map_id}' not found!`));
             } else {
-                res.status(406).send(new utils.Error(`Sensor '${sensor_id}' failed to update, verify if the id is correct and try again`));
+                var data = await mongo.updateDB(collection, {
+                    sensor_id: sensor_id,
+                    owner: ownerKey
+                }, {
+                    $set: new SensorUpdate(req.body)
+                });
+                if (data.result.nModified > 0 || data.result.n > 0) {
+                    res.send(new utils.Success(`Sensor '${sensor_id}' updated!`));
+                } else {
+                    res.status(406).send(new utils.Error(`Sensor '${sensor_id}' failed to update, verify if the id is correct and try again`));
+                }
             }
         } else {
             res.status(401).send();
@@ -153,6 +165,7 @@ class SensorInsert {
         this.name       = obj.name;
         this.pos_x      = obj.pos_x;
 	    this.pos_y      = obj.pos_y;
+	    this.map_id     = obj.map_id;
 	    this.sector_id  = obj.sector_id;
     }
 }
@@ -161,6 +174,7 @@ class SensorUpdate {
         this.name       = obj.name;
         this.pos_x      = obj.pos_x;
 	    this.pos_y      = obj.pos_y;
+	    this.map_id     = obj.map_id;
 	    this.sector_id  = obj.sector_id;
     }
 }
