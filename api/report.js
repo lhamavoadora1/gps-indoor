@@ -6,7 +6,6 @@ var router = express.Router();
 router.get('/', getReport);
 module.exports = router;
 
-
 var d = new Date(Date.now());
 var datetime = d.toLocaleString();
 var totalVisits = 290;
@@ -44,6 +43,3 @@ async function getReport(req, res) {
         res.status(500).send(new utils.Error(err));
     }
 }
-
-
-
