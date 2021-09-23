@@ -18,10 +18,10 @@ app.use(express.urlencoded({limit: '16mb', extended: false}));
 app.use('/map', require('api/map'));
 app.use('/notification', require('api/notification'));
 app.use('/oauth', require('api/oauth'));
+app.use('/report', require('api/report'));
 app.use('/sector', require('api/sector'));
 app.use('/sensor', require('api/sensor'));
 app.use('/tag', require('api/tag'));
 app.use('/user', require('api/user'));
-app.use('/report', require('api/report'));
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
