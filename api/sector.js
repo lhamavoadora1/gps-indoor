@@ -4,14 +4,40 @@ const express = require('express'),
     collection = 'sectors';
 
 var router = express.Router();
-router.get('/:map_id', getAllSectors);
-router.get('/:map_id/:sector_id', getSector);
+router.get('/', getAllSectors);
+router.get('/:map_id', getAllSectorsFromMap);
+router.get('/:map_id/:sector_id', getSectorFromMap);
 router.post('/', insertSector);
 router.patch('/:map_id/:sector_id', updateSector);
 router.delete('/:map_id/:sector_id', deleteSector);
 module.exports = router;
 
 async function getAllSectors(req, res) {
+    try {
+        var authorization = req.headers.authorization;
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
+            var sectorsRetrieved = await mongo.findDB(collection, {
+                owner: ownerKey
+            });
+            if (!utils.isEmpty(sectorsRetrieved)) {
+                res.send({
+                    sectorsRetrieved
+                });
+            } else {
+                res.status(204).send();
+            }
+        } else {
+            res.status(401).send();
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(new utils.Error(err));
+    }
+}
+
+async function getAllSectorsFromMap(req, res) {
     try {
         var authorization = req.headers.authorization;
         var authData = await mongo.authenticateToken(authorization);
@@ -45,7 +71,7 @@ async function getAllSectors(req, res) {
     }
 }
 
-async function getSector(req, res) {
+async function getSectorFromMap(req, res) {
     try {
         var authorization = req.headers.authorization;
         var authData = await mongo.authenticateToken(authorization);
@@ -101,7 +127,8 @@ async function insertSector(req, res) {
                 });
                 var sectorRetrieved = await mongo.findDB(collection, {
                     sector_id: sector_id,
-                    map_id: map_id
+                    map_id: map_id,
+                    owner: ownerKey
                 });
                 if (utils.isEmpty(mapRetrieved)) {
                     res.status(406).send(new utils.Error(`No map ${map_id} found!`));
@@ -109,6 +136,7 @@ async function insertSector(req, res) {
                     res.status(406).send(new utils.Error(`Sector '${sector_id}' on map '${map_id}' is already in database!`));
                 } else {
                     var fullRequest = new SectorInsert(req.body);
+                    fullRequest.owner = ownerKey;
                     var data = await mongo.insertDB(collection, fullRequest);
                     if (data.result.n > 0) {
                         res.status(201).send(new utils.Success(`Sector '${sector_id}' inserted!`));
@@ -145,7 +173,8 @@ async function updateSector(req, res) {
             } else {
                 var data = await mongo.updateDB(collection, {
                     sector_id: sector_id,
-                    map_id: map_id
+                    map_id: map_id,
+                    owner: ownerKey
                 }, {
                     $set: new SectorUpdate(req.body)
                 });
@@ -172,23 +201,17 @@ async function deleteSector(req, res) {
             var sector_id = req.params.sector_id;
             var map_id = req.params.map_id;
             var ownerKey = authData.owner;
-            var mapRetrieved = await mongo.findDB('maps', {
+            var data = await mongo.deleteDB(collection, {
+                sector_id: sector_id,
                 map_id: map_id,
                 owner: ownerKey
             });
-            if (utils.isEmpty(mapRetrieved)) {
-                res.status(406).send(new utils.Error(`No map '${map_id}' found!`));
+            if (data.result.n > 0) {
+                res.send(new utils.Success(`Sector '${sector_id}' deleted!`));
             } else {
-                var data = await mongo.deleteDB(collection, {
-                    sector_id: sector_id,
-                    map_id: map_id
-                });
-                if (data.result.n > 0) {
-                    res.send(new utils.Success(`Sector '${sector_id}' deleted!`));
-                } else {
-                    res.status(406).send(new utils.Error(`Sector '${sector_id}' failed to delete, verify if the id is correct and try again`));
-                }
+                res.status(406).send(new utils.Error(`Sector '${sector_id}' failed to delete, verify if the id is correct and try again`));
             }
+            
         } else {
             res.status(401).send();
         }
