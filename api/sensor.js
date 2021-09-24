@@ -64,13 +64,18 @@ async function insertSensor(req, res) {
         if (authData) {
             var sensor_id = req.body.sensor_id;
             var map_id = req.body.map_id;
+            var sector_id = req.body.sector_id;
             var ownerKey = authData.owner;
             if (utils.isEmpty(sensor_id)) {
                 res.status(400).send(new utils.Error(`sensor_id is empty!`));
             } else if (utils.isEmpty(map_id)) {
                 res.status(400).send(new utils.Error(`map_id is empty!`));
-            } else if (utils.isEmpty(await mongo.findDB('maps', {map_id:map_id, owner:ownerKey}))) {
+            } else if (utils.isEmpty(sector_id)) {
+                res.status(400).send(new utils.Error(`sector_id is empty!`));
+            } else if (utils.isEmpty(await mongo.findDB('maps', {map_id:map_id,owner:ownerKey}))) {
                 res.status(400).send(new utils.Error(`Map '${map_id}' not found!`));
+            } else if (utils.isEmpty(await mongo.findDB('sectors', {sector_id:sector_id,map_id:map_id,owner:ownerKey}))) {
+                res.status(400).send(new utils.Error(`Sector '${sector_id}' for Map '${map_id}' not found!`));
             } else {
                 var sensorsRetrieved = await mongo.findDB(collection, {
                     sensor_id: sensor_id,
@@ -105,13 +110,18 @@ async function updateSensor(req, res) {
         var authorization = req.headers.authorization;
         var authData = await mongo.authenticateToken(authorization);
         if (authData) {
-            var sensor_id = req.params.sensor_id;
             var ownerKey = authData.owner;
+            var sensor_id = req.params.sensor_id;
             var map_id = req.body.map_id;
+            var sector_id = req.body.sector_id;
             if (utils.isEmpty(map_id)) {
                 res.status(400).send(new utils.Error(`map_id is empty!`));
-            } else if (utils.isEmpty(await mongo.findDB('maps', {map_id:map_id, owner:ownerKey}))) {
+            } else if (utils.isEmpty(sector_id)) {
+                res.status(400).send(new utils.Error(`sector_id is empty!`));
+            } else if (utils.isEmpty(await mongo.findDB('maps', {map_id:map_id,owner:ownerKey}))) {
                 res.status(400).send(new utils.Error(`Map '${map_id}' not found!`));
+            } else if (utils.isEmpty(await mongo.findDB('sectors', {sector_id:sector_id,map_id:map_id,owner:ownerKey}))) {
+                res.status(400).send(new utils.Error(`Sector '${sector_id}' for Map '${map_id}' not found!`));
             } else {
                 var data = await mongo.updateDB(collection, {
                     sensor_id: sensor_id,
