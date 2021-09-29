@@ -326,16 +326,18 @@ async function getVisits(req, res) {
 
 async function insertNotification(fullRequest) {
     try {
-        var sensorsRetrieved = await mongo.findDB('sensors', {
+        var sensorsRetrieved = await mongo.findDBRaw('sensors', {
             sensor_id: fullRequest.sensor_id
         });
         if (!utils.isEmpty(sensorsRetrieved)) {
-            var data = await mongo.insertDB(collection, fullRequest);
-            if (data.result.n > 0) {
-                // console.log('Tag inserted!');
-            } else {
-                // console.log('Tag not inserted!');
-            }
+            insertTag(fullRequest.tag_id, sensorsRetrieved[0].owner);
+            // var data = await 
+            mongo.insertDB(collection, fullRequest);
+            // if (data.result.n > 0) {
+            //     // console.log('Tag inserted!');
+            // } else {
+            //     // console.log('Tag not inserted!');
+            // }
         } else {
             // console.log(`No sensor '${fullRequest.sensor_id}' found!`);
         }
@@ -344,6 +346,20 @@ async function insertNotification(fullRequest) {
         console.log(fullRequest)
         console.error(err);
         res.status(500).send(new utils.Error(err));
+    }
+}
+
+async function insertTag(tag_id, ownerKey) {
+    var tagsRetrieved = await mongo.findDB('tags', {
+        tag_id: tag_id,
+        owner: ownerKey
+    });
+    if (utils.isEmpty(tagsRetrieved)) {
+        mongo.insertDB('tags', {
+            tag_id: tag_id,
+            name: tag_id,
+            owner: ownerKey
+        });
     }
 }
 

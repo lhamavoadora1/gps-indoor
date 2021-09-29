@@ -78,8 +78,7 @@ async function insertSensor(req, res) {
                 res.status(400).send(new utils.Error(`Sector '${sector_id}' for Map '${map_id}' not found!`));
             } else {
                 var sensorsRetrieved = await mongo.findDB(collection, {
-                    sensor_id: sensor_id,
-                    owner: ownerKey
+                    sensor_id: sensor_id
                 });
                 if (!utils.isEmpty(sensorsRetrieved)) {
                     res.status(406).send(new utils.Error(`Sensor '${sensor_id}' is already in database!`));
