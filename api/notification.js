@@ -14,6 +14,7 @@ router.get('/sensor/:sensor_id/', getSensorNotification);
 router.get('/sensor/:sensor_id/:timestamp', getSensorNotification);
 router.get('/tag/:tag_id/', getTagNotification);
 router.get('/tag/:tag_id/:timestamp', getTagNotification);
+router.get('/visit/:timestamp', getVisits);
 // router.delete('/', deleteAllNotifications);
 router.delete('/:sensor_id/:timestamp', deleteNotification);
 module.exports = router;
@@ -169,6 +170,83 @@ async function getTagNotification(req, res) {
                     } else {
                         res.status(204).send();
                     }
+                }
+            }
+        } else {
+            res.status(401).send();
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(new utils.Error(err));
+    }
+}
+
+async function getVisits(req, res) {
+    try {
+        var authorization = req.headers.authorization;
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
+            var sensorsRetrieved = await mongo.findDB('sensors', {
+                owner: ownerKey
+            });
+            if (utils.isEmpty(sensorsRetrieved)) {
+                res.status(406).send(new utils.Error(`No sensors found!`));
+            } else {
+                var sensorMap = {};
+                for (let i = 0; i < sensorsRetrieved.length; i++) {
+                    let sensor = sensorsRetrieved[i];
+                    let key = sensor.sensor_id;
+                    sensorMap[key] = sensor;
+                }
+                var timestampsReceived = req.params.timestamp;
+                var filter = getFilterFromTimestamps(timestampsReceived);
+                if (filter) {
+                    var query;
+                    if (!filter.$and) {
+                        query = {
+                            timestamp: filter
+                        };
+                    } else {
+                        query = {
+                            $and: filter.$and
+                        };
+                    }
+                    var notificationsRetrieved = await mongo.findDB(collection, query);
+                    if (!utils.isEmpty(notificationsRetrieved)) {
+                        var sectorMap = {};
+                        var lastOccurencePerTag = {};
+                        for (notification of notificationsRetrieved) {
+                            let auxTagId = notification.tag_id;
+                            let auxSensorId = notification.sensor_id;
+                            if (sensorMap[auxSensorId]) {
+                                let sensor = sensorMap[auxSensorId];
+                                let auxSectorId = sensor.sector_id;
+                                if (!lastOccurencePerTag[auxTagId]) {
+                                    lastOccurencePerTag[auxTagId] = auxSectorId;
+                                    sectorMap[auxSectorId] = {
+                                        sector_id: auxSectorId,
+                                        visits: 1
+                                    };
+                                }
+                                if (lastOccurencePerTag[auxTagId] != auxSectorId) {
+                                    let newVisits = (!utils.isEmpty(sectorMap[auxSectorId]) ? sectorMap[auxSectorId].visits : 0) + 1;
+                                    sectorMap[auxSectorId] = {
+                                        sector_id: auxSectorId,
+                                        visits: newVisits
+                                    };
+                                    lastOccurencePerTag[auxTagId] = auxSectorId;
+                                }
+                            }
+                        }
+                        res.send({
+                            sectorMap
+                        });
+                    } else {
+                        res.status(204).send();
+                    }
+                } else {
+                    res.status(406).send(new utils.Error(`URL is malformed!`));
                 }
             }
         } else {
@@ -352,6 +430,6 @@ client.on('message', async function (topic, message) {
     console.log(message.toString());
     var notification = new NotificationInsert(JSON.parse(message.toString()));
     console.log(notification);
-    insertNotification(notification);
+    // insertNotification(notification);
     // client.end();
 });
