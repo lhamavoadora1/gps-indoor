@@ -10,13 +10,14 @@ try {
 
 var router = express.Router();
 router.get('/', getAllNotifications);
+router.get('/:timestamp/', getNotification);
 router.get('/sensor/:sensor_id/', getSensorNotification);
 router.get('/sensor/:sensor_id/:timestamp', getSensorNotification);
 router.get('/tag/:tag_id/', getTagNotification);
 router.get('/tag/:tag_id/:timestamp', getTagNotification);
 router.get('/visit/:timestamp', getVisits);
 // router.delete('/', deleteAllNotifications);
-router.delete('/:sensor_id/:timestamp', deleteNotification);
+// router.delete('/:sensor_id/:timestamp', deleteNotification);
 module.exports = router;
 
 async function getAllNotifications(req, res) {
@@ -45,6 +46,71 @@ async function getAllNotifications(req, res) {
                 }
             } else {
                 res.status(204).send();
+            }
+        } else {
+            res.status(401).send();
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(new utils.Error(err));
+    }
+}
+
+async function getNotification(req, res) {
+    try {
+        var authorization = req.headers.authorization;
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
+            var sensorRetrieved = await mongo.findDB('sensors', {
+                owner: ownerKey
+            });
+            if (utils.isEmpty(sensorRetrieved)) {
+                res.status(406).send(new utils.Error(`No sensor found!`));
+            } else {
+                var sensorIdList = [];
+                for (var sensor of sensorRetrieved) {
+                    sensorIdList.push({sensor_id:sensor.sensor_id});
+                }
+                var timestampsReceived = req.params.timestamp;
+                if (timestampsReceived) {
+                    var filter = getFilterFromTimestamps(timestampsReceived);
+                    if (filter) {
+                        var query;
+                        if (!filter.$and) {
+                            query = {
+                                $or: sensorIdList,
+                                timestamp: filter
+                            }
+                        } else {
+                            query = {
+                                $or: sensorIdList,
+                                $and: filter.$and
+                            }
+                        }
+                        var notificationsRetrieved = await mongo.findDB(collection, query);
+                        if (!utils.isEmpty(notificationsRetrieved)) {
+                            res.send({
+                                notificationsRetrieved
+                            });
+                        } else {
+                            res.status(204).send();
+                        }
+                    } else {
+                        res.status(406).send(new utils.Error(`URL is malformed!`));
+                    }
+                } else {
+                    var notificationsRetrieved = await mongo.findDB(collection, {
+                        sensor_id: sensor_id
+                    });
+                    if (!utils.isEmpty(notificationsRetrieved)) {
+                        res.send({
+                            notificationsRetrieved
+                        });
+                    } else {
+                        res.status(204).send();
+                    }
+                }
             }
         } else {
             res.status(401).send();
@@ -430,6 +496,6 @@ client.on('message', async function (topic, message) {
     console.log(message.toString());
     var notification = new NotificationInsert(JSON.parse(message.toString()));
     console.log(notification);
-    // insertNotification(notification);
+    insertNotification(notification);
     // client.end();
 });
