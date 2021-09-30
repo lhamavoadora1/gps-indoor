@@ -18,9 +18,9 @@ async function updateUser(req, res) {
                 $set: new UserUpdate(req.body)
             });
             if (data.result.nModified > 0 || data.result.n > 0) {
-                res.json(new utils.Success(`Password updated!`));
+                res.send(new utils.Success(`Password updated!`));
             } else {
-                res.json(new utils.Error(`Password failed to update, contact an admin for help`));
+                res.status(406).send(new utils.Error(`Password failed to update, contact an admin for help`));
             }
         } else {
             res.status(401).send();
