@@ -141,6 +141,7 @@ module.exports = {
     authenticate,
     authenticateToken,
     findDB,
+    findDBRaw,
     insertDB,
     updateDB,
     deleteDB,
