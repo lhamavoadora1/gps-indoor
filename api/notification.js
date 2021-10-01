@@ -39,7 +39,7 @@ async function getAllNotifications(req, res) {
                 });
                 if (!utils.isEmpty(notificationsRetrieved)) {
                     res.send({
-                        notificationsRetrieved
+                        response: notificationsRetrieved
                     });
                 } else {
                     res.status(204).send();
@@ -91,7 +91,7 @@ async function getNotification(req, res) {
                         var notificationsRetrieved = await mongo.findDB(collection, query);
                         if (!utils.isEmpty(notificationsRetrieved)) {
                             res.send({
-                                notificationsRetrieved
+                                response: notificationsRetrieved
                             });
                         } else {
                             res.status(204).send();
@@ -105,7 +105,7 @@ async function getNotification(req, res) {
                     });
                     if (!utils.isEmpty(notificationsRetrieved)) {
                         res.send({
-                            notificationsRetrieved
+                            response: notificationsRetrieved
                         });
                     } else {
                         res.status(204).send();
@@ -154,7 +154,7 @@ async function getSensorNotification(req, res) {
                         var notificationsRetrieved = await mongo.findDB(collection, query);
                         if (!utils.isEmpty(notificationsRetrieved)) {
                             res.send({
-                                notificationsRetrieved
+                                response: notificationsRetrieved
                             });
                         } else {
                             res.status(204).send();
@@ -168,7 +168,7 @@ async function getSensorNotification(req, res) {
                     });
                     if (!utils.isEmpty(notificationsRetrieved)) {
                         res.send({
-                            notificationsRetrieved
+                            response: notificationsRetrieved
                         });
                     } else {
                         res.status(204).send();
@@ -217,7 +217,7 @@ async function getTagNotification(req, res) {
                         var notificationsRetrieved = await mongo.findDB(collection, query);
                         if (!utils.isEmpty(notificationsRetrieved)) {
                             res.send({
-                                notificationsRetrieved
+                                response: notificationsRetrieved
                             });
                         } else {
                             res.status(204).send();
@@ -231,7 +231,7 @@ async function getTagNotification(req, res) {
                     });
                     if (!utils.isEmpty(notificationsRetrieved)) {
                         res.send({
-                            notificationsRetrieved
+                            response: notificationsRetrieved
                         });
                     } else {
                         res.status(204).send();

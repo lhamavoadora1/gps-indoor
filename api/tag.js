@@ -23,7 +23,7 @@ async function getAllTags(req, res) {
         });
         if (!utils.isEmpty(tagsRetrieved)) {
             res.send({
-                tagsRetrieved
+                response: tagsRetrieved
             });
         } else {
             res.status(204).send();
@@ -45,7 +45,7 @@ async function getTag(req, res) {
             });
             if (!utils.isEmpty(tagsRetrieved)) {
                 res.send({
-                    tagsRetrieved
+                    response: tagsRetrieved
                 });
             } else {
                 res.status(204).send();

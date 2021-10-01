@@ -22,7 +22,7 @@ async function getAllMaps(req, res) {
             });
             if (!utils.isEmpty(mapsRetrieved)) {
                 res.send({
-                    mapsRetrieved
+                    response: mapsRetrieved
                 });
             } else {
                 res.status(204).send();
@@ -48,7 +48,7 @@ async function getMap(req, res) {
             });
             if (!utils.isEmpty(mapsRetrieved)) {
                 res.send({
-                    mapsRetrieved
+                    response: mapsRetrieved
                 });
             } else {
                 res.status(204).send();

@@ -21,7 +21,7 @@ async function getAllSensors(req, res) {
         });
         if (!utils.isEmpty(sensorsRetrieved)) {
             res.send({
-                sensorsRetrieved
+                response: sensorsRetrieved
             });
         } else {
             res.status(204).send();
@@ -43,7 +43,7 @@ async function getSensor(req, res) {
             });
             if (!utils.isEmpty(sensorsRetrieved)) {
                 res.send({
-                    sensorsRetrieved
+                    response: sensorsRetrieved
                 });
             } else {
                 res.status(204).send();

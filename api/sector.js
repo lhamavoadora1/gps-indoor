@@ -23,7 +23,7 @@ async function getAllSectors(req, res) {
             });
             if (!utils.isEmpty(sectorsRetrieved)) {
                 res.send({
-                    sectorsRetrieved
+                    response: sectorsRetrieved
                 });
             } else {
                 res.status(204).send();
@@ -54,7 +54,7 @@ async function getAllSectorsFromMap(req, res) {
                 });
                 if (!utils.isEmpty(sectorsRetrieved)) {
                     res.send({
-                        sectorsRetrieved
+                        response: sectorsRetrieved
                     });
                 } else {
                     res.status(204).send();
@@ -89,7 +89,7 @@ async function getSectorFromMap(req, res) {
                 });
                 if (!utils.isEmpty(sectorsRetrieved)) {
                     res.send({
-                        sectorsRetrieved
+                        response: sectorsRetrieved
                     });
                 } else {
                     res.status(204).send();
