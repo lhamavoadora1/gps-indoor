@@ -305,8 +305,12 @@ async function getVisits(req, res) {
                                 }
                             }
                         }
+                        var visitList = [];
+                        Object.keys(sectorMap).forEach(function(key) {
+                            visitList.push(sectorMap[key]);
+                        });
                         res.send({
-                            sectorMap
+                            response: visitList
                         });
                     } else {
                         res.status(204).send();
@@ -323,7 +327,6 @@ async function getVisits(req, res) {
         res.status(500).send(new utils.Error(err));
     }
 }
-
 async function insertNotification(fullRequest) {
     try {
         var sensorsRetrieved = await mongo.findDBRaw('sensors', {
