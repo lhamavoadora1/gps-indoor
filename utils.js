@@ -1,3 +1,10 @@
+var config;
+try {
+    config = require('config.json');
+} catch (error) {}
+var privateKey = process.env.privateKey || config.privateKey,
+    publicKey = process.env.publicKey || config.publicKey;
+
 function isUndefined(obj) {
     return (typeof obj == 'undefined')
 }
@@ -45,7 +52,6 @@ function createHash() {
     var current_date = (new Date()).valueOf().toString();
     var random = Math.random().toString();
     var hash = crypto.createHash('sha1').update(current_date + random).digest('hex');
-    // console.log(`hash => ${hash}`);
     return hash;
 }
 
@@ -66,11 +72,33 @@ function getFormattedDate(timestamp) {
 function checkSizeInBytes(str) {
     var bodyLimitSize = 16777216;
     var size = Buffer.byteLength(str, 'utf8');
-    // console.log(`${str} : ${str.length} characters\n${size} bytes`);
     if (size > bodyLimitSize) {
         return false;
     }
     return true;
+}
+
+function generateRSAKeys() {
+    const NodeRSA = require('node-rsa');
+    const key = new NodeRSA({b: 1024});
+    console.log('private => ' + key.exportKey('private'));
+    console.log('public => ' + key.exportKey('public'));
+}
+
+function encryptRSA(message) {
+    const NodeRSA = require('node-rsa');
+    var pvKey = new NodeRSA(privateKey);
+    var encryptedMessage = pvKey.encrypt(message, 'base64');
+    // console.log('encryptedMessage => ' + encryptedMessage);
+    return encryptedMessage;
+}
+
+function decryptRSA(message) {
+    const NodeRSA = require('node-rsa');
+    var pbKey = new NodeRSA(privateKey);
+    var decryptedMessage = pbKey.decrypt(message, 'utf8');
+    // console.log('decryptedMessage => ' + decryptedMessage);
+    return decryptedMessage;
 }
 
 class Success {
@@ -99,6 +127,9 @@ module.exports = {
     getFormattedDate,
     checkSizeInBytes,
     createHash,
+    generateRSAKeys,
+    encryptRSA,
+    decryptRSA,
     Success,
     Error
 };

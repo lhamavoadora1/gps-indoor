@@ -10,22 +10,21 @@ var database = process.env.mongoDatabase || config.mongoDatabase,
        dbUrl = process.env.mongoUrl || config.mongoUrl;
 
 async function authenticate(authorization) {
+    var foundUser = false;
     var basicData = utils.getBasicAuthData(authorization);
-    // console.log('basicData')
-    // console.log(basicData)
-    var users = await findDB('users', basicData);
-    // console.log('users')
-    // console.log(users)
-    return users.length;
+    var users = await findDB('users', {
+        username: basicData.username
+    });
+    var decryptedPassword = utils.decryptRSA(users[0].password);
+    if (decryptedPassword == basicData.password) {
+        foundUser = true;
+    }
+    return foundUser;
 }
 
 async function authenticateToken(authorization) {
     var tokenData = utils.getBearerData(authorization);
-    // console.log('tokenData')
-    // console.log(tokenData)
     var oauth = await findDBRaw('oauth', tokenData);
-    // console.log('oauth')
-    // console.log(oauth)
     return oauth[0];
 }
 

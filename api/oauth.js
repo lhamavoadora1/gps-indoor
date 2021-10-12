@@ -22,11 +22,6 @@ async function getToken(req, res) {
             });
             var data;
             if (!utils.isEmpty(dataRetrieved)) {
-                // data = await mongo.updateDB(collection, {
-                //     owner: ownerKey
-                // }, {
-                //     $set: new OauthUpsert(fullRequest)
-                // });
                 res.status(201).send({
                     hash: dataRetrieved[0].hash
                 });
@@ -57,6 +52,12 @@ class OauthUpsert {
     }
 }
 
+function getDayDifference(now, before) {
+    var difference = now - before;
+    var daysDifference = Math.floor(difference / 1000 / 60 / 60 / 24);
+    return daysDifference;
+}
+
 async function resetTokens() {
     var dataRetrieved = await mongo.findDB(collection, {});
     for (var oauth of dataRetrieved) {
@@ -67,12 +68,6 @@ async function resetTokens() {
     }
 }
 
-function getDayDifference(now, before) {
-    var difference = now - before;
-    var daysDifference = Math.floor(difference / 1000 / 60 / 60 / 24);
-    return daysDifference;
-}
-
 const { ToadScheduler, SimpleIntervalJob, Task } = require('toad-scheduler');
 const scheduler = new ToadScheduler();
 const task = new Task('Reset Tokens', () => {
@@ -81,5 +76,4 @@ const task = new Task('Reset Tokens', () => {
 });
 const job = new SimpleIntervalJob({ hours: 1, }, task);
 scheduler.addSimpleIntervalJob(job);
-// when stopping your app
 // scheduler.stop()
