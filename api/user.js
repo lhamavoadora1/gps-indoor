@@ -40,16 +40,19 @@ async function updateUser(req, res) {
         var authData = await mongo.authenticateToken(authorization);
         if (authData) {
             var username = utils.getOwnerName(authData.owner);
-            var password = utils.encryptRSA(req.body.password);
+            var encryptedPassword = utils.encryptRSA(req.body.password);
+            var usersRetrieved = await mongo.findDB(collection, {username:username});
+            var userUpdate = new UserUpdate({
+                username: username,
+                password: encryptedPassword
+            });
             var data = await mongo.updateDB(collection, {
                 username: username
             }, {
-                $set: new UserUpdate({
-                    username: username,
-                    password: password
-                })
+                $set: userUpdate
             });
             if (data.result.nModified > 0 || data.result.n > 0) {
+                deleteToken(utils.decryptRSA(usersRetrieved[0].password), req.body.password, authData.owner);
                 res.send(new utils.Success(`Password updated!`));
             } else {
                 res.status(406).send(new utils.Error(`Password failed to update, contact an admin for help`));
@@ -60,6 +63,12 @@ async function updateUser(req, res) {
     } catch (err) {
         console.error(err);
         res.status(500).send(new utils.Error(err));
+    }
+}
+
+async function deleteToken(beforePassword, afterPassword, owner) {
+    if (beforePassword != afterPassword) {
+        mongo.deleteDB('oauth', {owner:owner});
     }
 }
 
