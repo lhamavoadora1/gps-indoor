@@ -87,7 +87,7 @@ function generateRSAKeys() {
 
 function encryptRSA(message) {
     const NodeRSA = require('node-rsa');
-    console.log('privateKey => ' + privateKey);
+    // console.log('privateKey => ' + privateKey);
     var pvKey = new NodeRSA(privateKey, 'pkcs1');
     var encryptedMessage = pvKey.encrypt(message, 'base64');
     // console.log('encryptedMessage => ' + encryptedMessage);
@@ -96,7 +96,7 @@ function encryptRSA(message) {
 
 function decryptRSA(message) {
     const NodeRSA = require('node-rsa');
-    console.log('privateKey => ' + privateKey);
+    // console.log('privateKey => ' + privateKey);
     var pbKey = new NodeRSA(privateKey, 'pkcs1');
     var decryptedMessage = pbKey.decrypt(message, 'utf8');
     // console.log('decryptedMessage => ' + decryptedMessage);
