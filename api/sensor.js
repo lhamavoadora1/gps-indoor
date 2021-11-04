@@ -3,6 +3,11 @@ const express = require('express'),
     utils = require('utils.js'),
     collection = 'sensors';
 
+var config;
+try {
+    config = require('config.json');
+} catch (error) {}
+
 var router = express.Router();
 router.get('/', getAllSensors);
 router.get('/:sensor_id', getSensor);
@@ -170,20 +175,93 @@ async function deleteSensor(req, res) {
 
 class SensorInsert {
     constructor(obj) {
-        this.sensor_id  = obj.sensor_id;
-        this.name       = obj.name;
-        this.pos_x      = obj.pos_x;
-	    this.pos_y      = obj.pos_y;
-	    this.map_id     = obj.map_id;
-	    this.sector_id  = obj.sector_id;
+        this.sensor_id = obj.sensor_id;
+        this.name      = obj.name;
+        this.pos_x     = obj.pos_x;
+	    this.pos_y     = obj.pos_y;
+	    this.map_id    = obj.map_id;
+	    this.sector_id = obj.sector_id;
+        this.is_active  = false;
     }
 }
 class SensorUpdate {
     constructor(obj) {
-        this.name       = obj.name;
-        this.pos_x      = obj.pos_x;
-	    this.pos_y      = obj.pos_y;
-	    this.map_id     = obj.map_id;
-	    this.sector_id  = obj.sector_id;
+        this.name           = obj.name;
+        this.pos_x          = obj.pos_x;
+	    this.pos_y          = obj.pos_y;
+	    this.map_id         = obj.map_id;
+	    this.sector_id      = obj.sector_id;
+	    this.last_modified_at = new Date().getTime();
     }
 }
+
+// Broker Connection
+
+var mqtt = require('mqtt');
+var options = {
+    port: process.env.mqttPort || config.mqttPort,
+    reconnectPeriod: 1
+};
+
+var broker = process.env.mqttBroker || config.mqttBroker;
+var keepAliveTopic = process.env.keepAliveTopic || config.keepAliveTopic;
+
+var client = mqtt.connect(broker, options);
+
+client.on('connect', function () {
+    console.log(`Connected to broker on ${broker}`);
+    client.subscribe(keepAliveTopic, function (err) {
+        if (!err) {
+            console.log(`Subscribed to topic ${keepAliveTopic}`);
+        } else {
+            console.log(err);
+        }
+    });
+});
+
+async function activateStatus(message) {
+    var sensorRetrieved = await mongo.findDB(collection, message);
+    var sensor = sensorRetrieved[0];
+    var newSensor = new SensorUpdate(sensor);
+    newSensor.is_active = true;
+    mongo.updateDB(collection, sensor, {
+        $set: newSensor
+    });
+}
+
+client.on('message', async function (topic, message) {
+    console.log(`message from topic: ${topic}`);
+    console.log(message.toString());
+    if (topic == keepAliveTopic) {
+        console.log('keepAliveTopic');
+        activateStatus(JSON.parse(message.toString()));
+    }
+    // client.end();
+});
+
+// Scheduler
+
+var timeLimit = 240000; // 4 minutes
+async function deactivateStatus() {
+    var dataRetrieved = await mongo.findDB(collection, {is_active:true});
+    for (var sensor of dataRetrieved) {
+        var timeDifference = new Date().getTime() - sensor.last_modified_at;
+        if (timeDifference > timeLimit || utils.isEmpty(sensor.last_modified_at)) {
+            var updatedSensor = new SensorUpdate(sensor);
+            updatedSensor.is_active = false;
+            mongo.updateDB(collection, sensor, {
+                $set: updatedSensor
+            });
+        }
+    }
+}
+
+const { ToadScheduler, SimpleIntervalJob, Task } = require('toad-scheduler');
+const scheduler = new ToadScheduler();
+const task = new Task('Keep Alive Update', () => {
+    console.log('Deactivating Sensor Status...');
+    deactivateStatus();
+});
+const job = new SimpleIntervalJob({ minutes: 1, }, task);
+scheduler.addSimpleIntervalJob(job);
+// scheduler.stop()

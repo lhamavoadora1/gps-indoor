@@ -52,6 +52,8 @@ class OauthUpsert {
     }
 }
 
+// Scheduler
+
 function getDayDifference(now, before) {
     var difference = now - before;
     var daysDifference = Math.floor(difference / 1000 / 60 / 60 / 24);

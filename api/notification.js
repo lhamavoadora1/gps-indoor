@@ -497,15 +497,17 @@ var options = {
 };
 
 var broker = process.env.mqttBroker || config.mqttBroker;
-var topic = process.env.mqttTopic || config.mqttTopic;
+var notificationTopic = process.env.notificationTopic || config.notificationTopic;
 
 var client = mqtt.connect(broker, options);
 
 client.on('connect', function () {
     console.log(`Connected to broker on ${broker}`);
-    client.subscribe(topic, function (err) {
+    client.subscribe(notificationTopic, function (err) {
         if (!err) {
-            console.log(`Subscribed to topic ${topic}`);
+            console.log(`Subscribed to topic ${notificationTopic}`);
+        } else {
+            console.log(err);
         }
     });
 });
@@ -513,8 +515,11 @@ client.on('connect', function () {
 client.on('message', async function (topic, message) {
     console.log(`message from topic: ${topic}`);
     console.log(message.toString());
-    var notification = new NotificationInsert(JSON.parse(message.toString()));
-    console.log(notification);
-    insertNotification(notification);
+    if (topic == notificationTopic) {
+        console.log('notificationTopic');
+        var notification = new NotificationInsert(JSON.parse(message.toString()));
+        console.log(notification);
+        insertNotification(notification);
+    }
     // client.end();
 });
