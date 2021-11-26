@@ -66,9 +66,10 @@ function getFormattedTime(timestamp) {
 
 function getGMT(date) {
     var d = new Date();
-    var gmtHours = - d.getTimezoneOffset() / 60;
+    var gmtHours = -3//- d.getTimezoneOffset() / 60;
     // console.log("The local time zone is: GMT " + gmtHours);
     date.setTime(date.getTime() + (gmtHours * 60 * 60 * 1000))
+    console.log(date);
     return date;
 }
 
