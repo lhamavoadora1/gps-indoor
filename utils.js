@@ -64,8 +64,16 @@ function getFormattedTime(timestamp) {
     return formattedTime;
 }
 
+function getGMT(date) {
+    var d = new Date();
+    var gmtHours = - d.getTimezoneOffset() / 60;
+    // console.log("The local time zone is: GMT " + gmtHours);
+    date.setTime(date.getTime() + (gmtHours * 60 * 60 * 1000))
+    return date;
+}
+
 function getFormattedFullDate(timestamp) {
-    var date = new Date(timestamp);
+    var date = getGMT(new Date(timestamp));
     return date.getDate() + '/' + date.getMonth() + '/' + date.getFullYear();
 }
 
