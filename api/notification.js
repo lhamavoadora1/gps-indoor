@@ -40,8 +40,16 @@ async function getAllNotifications(req, res) {
                     $or: sensor_id_list
                 });
                 if (!utils.isEmpty(notificationsRetrieved)) {
+                    var lastSensorPerTag = {};
+                    var trueNoti = [];
+                    for (var noti of notificationsRetrieved) {
+                        if (!lastSensorPerTag[noti.tag_id] || lastSensorPerTag[noti.tag_id] != noti.sensor_id) {
+                            trueNoti.push(noti);
+                            lastSensorPerTag[noti.tag_id] = noti.sensor_id;
+                        }
+                    }
                     res.send({
-                        response: notificationsRetrieved
+                        response: trueNoti
                     });
                 } else {
                     res.status(204).send();
@@ -92,8 +100,16 @@ async function getNotification(req, res) {
                         }
                         var notificationsRetrieved = await mongo.findDB(collection, query);
                         if (!utils.isEmpty(notificationsRetrieved)) {
+                            var lastSensorPerTag = {};
+                            var trueNoti = [];
+                            for (var noti of notificationsRetrieved) {
+                                if (!lastSensorPerTag[noti.tag_id] || lastSensorPerTag[noti.tag_id] != noti.sensor_id) {
+                                    trueNoti.push(noti);
+                                    lastSensorPerTag[noti.tag_id] = noti.sensor_id;
+                                }
+                            }
                             res.send({
-                                response: notificationsRetrieved
+                                response: trueNoti
                             });
                         } else {
                             res.status(204).send();
@@ -155,8 +171,16 @@ async function getSensorNotification(req, res) {
                         }
                         var notificationsRetrieved = await mongo.findDB(collection, query);
                         if (!utils.isEmpty(notificationsRetrieved)) {
+                            var lastSensorPerTag = {};
+                            var trueNoti = [];
+                            for (var noti of notificationsRetrieved) {
+                                if (!lastSensorPerTag[noti.tag_id] || lastSensorPerTag[noti.tag_id] != noti.sensor_id) {
+                                    trueNoti.push(noti);
+                                    lastSensorPerTag[noti.tag_id] = noti.sensor_id;
+                                }
+                            }
                             res.send({
-                                response: notificationsRetrieved
+                                response: trueNoti
                             });
                         } else {
                             res.status(204).send();
@@ -218,8 +242,16 @@ async function getTagNotification(req, res) {
                         }
                         var notificationsRetrieved = await mongo.findDB(collection, query);
                         if (!utils.isEmpty(notificationsRetrieved)) {
+                            var lastSensorPerTag = {};
+                            var trueNoti = [];
+                            for (var noti of notificationsRetrieved) {
+                                if (!lastSensorPerTag[noti.tag_id] || lastSensorPerTag[noti.tag_id] != noti.sensor_id) {
+                                    trueNoti.push(noti);
+                                    lastSensorPerTag[noti.tag_id] = noti.sensor_id;
+                                }
+                            }
                             res.send({
-                                response: notificationsRetrieved
+                                response: trueNoti
                             });
                         } else {
                             res.status(204).send();
