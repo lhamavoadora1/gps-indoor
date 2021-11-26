@@ -16,6 +16,8 @@ router.get('/sensor/:sensor_id/:timestamp', getSensorNotification);
 router.get('/tag/:tag_id/', getTagNotification);
 router.get('/tag/:tag_id/:timestamp', getTagNotification);
 router.get('/visit/:timestamp', getVisits);
+router.get('/visitByDay/:timestamp', getVisitsByDay);
+router.get('/visitTimeMean/:timestamp', getVisitsTimeMean);
 // router.delete('/', deleteAllNotifications);
 // router.delete('/:sensor_id/:timestamp', deleteNotification);
 module.exports = router;
@@ -327,6 +329,216 @@ async function getVisits(req, res) {
         res.status(500).send(new utils.Error(err));
     }
 }
+
+async function getVisitsByDay(req, res) {
+    try {
+        var authorization = req.headers.authorization;
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
+            var sensorsRetrieved = await mongo.findDB('sensors', {
+                owner: ownerKey,
+                sector_id: 'entrada_01'
+            });
+            if (utils.isEmpty(sensorsRetrieved)) {
+                res.status(406).send(new utils.Error(`No sensors found!`));
+            } else {
+                var sensorMap = {};
+                for (let i = 0; i < sensorsRetrieved.length; i++) {
+                    let sensor = sensorsRetrieved[i];
+                    let key = sensor.sensor_id;
+                    sensorMap[key] = sensor;
+                }
+                var timestampsReceived = req.params.timestamp;
+                var filter = getFilterFromTimestamps(timestampsReceived);
+                if (filter) {
+                    var query;
+                    if (!filter.$and) {
+                        query = {
+                            timestamp: filter
+                        };
+                    } else {
+                        query = {
+                            $and: filter.$and
+                        };
+                    }
+                    var notificationsRetrieved = await mongo.findDB(collection, query);
+                    if (!utils.isEmpty(notificationsRetrieved)) {
+                        var dateMap = {};
+                        var lastOccurencePerDate = {};
+                        for (notification of notificationsRetrieved) {
+                            let timestamp = notification.timestamp;
+                            let auxTagId = notification.tag_id;
+                            let auxSensorId = notification.sensor_id;
+
+                            let dateTime = utils.getFormattedFullDate(timestamp);
+                            let formattedDate = dateTime.substring(0, dateTime.indexOf(' '));
+                            console.log(formattedDate);
+
+                            if (sensorMap[auxSensorId]) {
+                                let sensor = sensorMap[auxSensorId];
+                                // let formattedDate = sensor.sector_id;
+                                if (!lastOccurencePerDate[formattedDate]) {
+                                    lastOccurencePerDate[formattedDate] = auxTagId;
+                                    dateMap[formattedDate] = {
+                                        date: formattedDate,
+                                        count: 1
+                                    };
+                                } else if (lastOccurencePerDate[formattedDate] == auxTagId) {
+                                    let newVisits = (!utils.isEmpty(dateMap[formattedDate]) ? dateMap[formattedDate].count : 0) + 1;
+                                    dateMap[formattedDate] = {
+                                        date: formattedDate,
+                                        count: newVisits
+                                    };
+                                    lastOccurencePerDate[formattedDate] = auxTagId;
+                                }
+                            }
+                        }
+                        var visitList = [];
+                        Object.keys(dateMap).forEach(function(key) {
+                            visitList.push(dateMap[key]);
+                        });
+                        res.send({
+                            response: visitList
+                        });
+                    } else {
+                        res.status(204).send();
+                    }
+                } else {
+                    res.status(406).send(new utils.Error(`URL is malformed!`));
+                }
+            }
+        } else {
+            res.status(401).send();
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(new utils.Error(err));
+    }
+}
+
+async function getVisitsTimeMean(req, res) {
+    try {
+        var authorization = req.headers.authorization;
+        var authData = await mongo.authenticateToken(authorization);
+        if (authData) {
+            var ownerKey = authData.owner;
+            var sensorsRetrieved = await mongo.findDB('sensors', {
+                owner: ownerKey,
+                $or: [{sector_id: 'entrada_01'}, {sector_id: 'saida_01'}]
+            });
+            if (utils.isEmpty(sensorsRetrieved)) {
+                res.status(406).send(new utils.Error(`No sensors found!`));
+            } else {
+                var sensorMap = {};
+                for (let i = 0; i < sensorsRetrieved.length; i++) {
+                    let sensor = sensorsRetrieved[i];
+                    let key = sensor.sensor_id;
+                    sensorMap[key] = sensor;
+                }
+                var timestampsReceived = req.params.timestamp;
+                var filter = getFilterFromTimestamps(timestampsReceived);
+                if (filter) {
+                    var query;
+                    if (!filter.$and) {
+                        query = {
+                            timestamp: filter
+                        };
+                    } else {
+                        query = {
+                            $and: filter.$and
+                        };
+                    }
+                    var notificationsRetrieved = await mongo.findDB(collection, query);
+                    if (!utils.isEmpty(notificationsRetrieved)) {
+                        var dateMap = {};
+                        for (notification of notificationsRetrieved) {
+                            let timestamp = notification.timestamp;
+                            let dateTime = utils.getFormattedFullDate(timestamp);
+                            let formattedDate = dateTime.substring(0, dateTime.indexOf(' '));
+                            if (!dateMap[formattedDate]) {
+                                dateMap[formattedDate] = [];
+                            }
+                            dateMap[formattedDate].push(notification);
+                        }
+                        let meanList = [];
+                        Object.keys(dateMap).forEach(function(key) {
+                            let i = 0;
+                            let lastEntryPerTag = {};
+                            let lastEntryPerTagAUX = {};
+                            let lastExitPerTag = {};
+                            let lastSectorType = {};
+                            for (let notification of dateMap[key]) {
+                                if (sensorMap[notification.sensor_id]) {
+                                    let notificationTagId = notification.tag_id;
+                                    // console.log('notificationTagId => ' + notificationTagId);
+                                    let sector_id = sensorMap[notification.sensor_id].sector_id;
+                                    if (!lastEntryPerTag[notificationTagId] && !lastEntryPerTagAUX[notificationTagId]) {
+                                        lastEntryPerTag[notificationTagId] = 0;
+                                        lastEntryPerTagAUX[notificationTagId] = 0;
+                                    }
+                                    if (!lastExitPerTag[notificationTagId]) {
+                                        lastExitPerTag[notificationTagId] = 0;
+                                    }
+                                    if (sector_id == 'entrada_01' && (!lastSectorType[notificationTagId] || lastSectorType[notificationTagId] == 'saida_01')) {
+                                        // console.log(notificationTagId + ' ENTROU ÀS ' + notification.timestamp);
+                                        lastSectorType[notificationTagId] = sector_id;
+                                        lastEntryPerTagAUX[notificationTagId] += notification.timestamp;
+                                    } else if (sector_id == 'saida_01' && lastSectorType[notificationTagId] == 'entrada_01') {
+                                        // console.log(notificationTagId + ' SAIU ÀS ' + notification.timestamp);
+                                        lastSectorType[notificationTagId] = sector_id;
+                                        // console.log('BEFORE ' + lastEntryPerTag[notificationTagId]);
+                                        lastEntryPerTag[notificationTagId] += lastEntryPerTagAUX[notificationTagId];
+                                        lastEntryPerTagAUX[notificationTagId] = 0;
+                                        // console.log('AFTER ' + lastEntryPerTag[notificationTagId]);
+                                        lastExitPerTag[notificationTagId] += notification.timestamp;
+                                        i++;
+                                    }
+                                }
+                            }
+                            let sum = 0;
+                            Object.keys(lastEntryPerTag).forEach(function(key) {
+                                if (lastExitPerTag[key] && lastExitPerTag[key] != 0 && lastEntryPerTag[key] != 0) {
+                                    // console.log('key');
+                                    // console.log(key);
+                                    // console.log('lastExitPerTag[key]');
+                                    // console.log(lastExitPerTag[key]);
+                                    // console.log('lastEntryPerTag[key]');
+                                    // console.log(lastEntryPerTag[key]);
+                                    let difference = lastExitPerTag[key] - lastEntryPerTag[key];
+                                    // console.log('DIFFERENCE');
+                                    // console.log(difference);
+                                    sum += difference;
+                                }
+                            });
+                            // console.log('SUM DIFFERENCE');
+                            // console.log(sum);
+                            // console.log('ITERATION');
+                            // console.log(i);
+                            meanList.push({
+                                minutes_mean: (sum / i)/1000/60,
+                                date: key
+                            });
+                        });
+                        res.send({
+                            response: meanList
+                        });
+                    } else {
+                        res.status(204).send();
+                    }
+                } else {
+                    res.status(406).send(new utils.Error(`URL is malformed!`));
+                }
+            }
+        } else {
+            res.status(401).send();
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(new utils.Error(err));
+    }
+}
+
 async function insertNotification(fullRequest) {
     try {
         var sensorsRetrieved = await mongo.findDBRaw('sensors', {

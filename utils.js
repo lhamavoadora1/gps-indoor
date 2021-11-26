@@ -64,6 +64,11 @@ function getFormattedTime(timestamp) {
     return formattedTime;
 }
 
+function getFormattedFullDate(timestamp) {
+    var date = new Date(timestamp);
+    return date.toLocaleString();
+}
+
 function getFormattedDate(timestamp) {
     var date = new Date(timestamp);
     return date.getDate();
@@ -126,6 +131,7 @@ module.exports = {
     getOwnerName,
     isIterable,
     getFormattedTime,
+    getFormattedFullDate,
     getFormattedDate,
     checkSizeInBytes,
     createHash,
