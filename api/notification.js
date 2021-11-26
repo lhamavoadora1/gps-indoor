@@ -370,11 +370,7 @@ async function getVisitsByDay(req, res) {
                             let timestamp = notification.timestamp;
                             let auxTagId = notification.tag_id;
                             let auxSensorId = notification.sensor_id;
-
-                            let dateTime = utils.getFormattedFullDate(timestamp);
-                            let formattedDate = dateTime.substring(0, dateTime.indexOf(' '));
-                            console.log(formattedDate);
-
+                            let formattedDate = utils.getFormattedFullDate(timestamp);
                             if (sensorMap[auxSensorId]) {
                                 let sensor = sensorMap[auxSensorId];
                                 // let formattedDate = sensor.sector_id;
@@ -454,8 +450,7 @@ async function getVisitsTimeMean(req, res) {
                         var dateMap = {};
                         for (notification of notificationsRetrieved) {
                             let timestamp = notification.timestamp;
-                            let dateTime = utils.getFormattedFullDate(timestamp);
-                            let formattedDate = dateTime.substring(0, dateTime.indexOf(' '));
+                            let formattedDate = utils.getFormattedFullDate(timestamp);
                             if (!dateMap[formattedDate]) {
                                 dateMap[formattedDate] = [];
                             }
@@ -515,10 +510,12 @@ async function getVisitsTimeMean(req, res) {
                             // console.log(sum);
                             // console.log('ITERATION');
                             // console.log(i);
-                            meanList.push({
-                                minutes_mean: (sum / i)/1000/60,
-                                date: key
-                            });
+                            if (sum != 0) {
+                                meanList.push({
+                                    minutes_mean: (sum / i)/1000/60,
+                                    date: key
+                                });
+                            }
                         });
                         res.send({
                             response: meanList

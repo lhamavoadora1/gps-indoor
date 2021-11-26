@@ -66,7 +66,7 @@ function getFormattedTime(timestamp) {
 
 function getFormattedFullDate(timestamp) {
     var date = new Date(timestamp);
-    return date.toLocaleString();
+    return date.getDate() + '/' + date.getMonth() + '/' + date.getFullYear();
 }
 
 function getFormattedDate(timestamp) {
